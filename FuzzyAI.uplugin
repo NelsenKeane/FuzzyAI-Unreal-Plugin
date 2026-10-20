@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "FuzzyAI",
+	"Description": "Adaptive Enemy AI powered using Fuzzy Logic and Utility AI for its decision making",
+	"Category": "Other",
+	"CreatedBy": "Nelsen Keane",
+	"CreatedByURL": "https://nelsen-keane-games-worlds.cool-elm-0302.chatgpt.site/",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "FuzzyAI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
