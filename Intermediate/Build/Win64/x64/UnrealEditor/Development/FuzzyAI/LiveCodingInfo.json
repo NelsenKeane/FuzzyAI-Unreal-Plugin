@@ -2,8 +2,11 @@
 	"RemapUnityFiles": 
 	{
 		"Module.FuzzyAI.cpp.obj": [
+			"FuzzyAI.init.gen.cpp.obj",
+			"ObservationAsset.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
-			"FuzzyAI.cpp.obj"
+			"FuzzyAI.cpp.obj",
+			"ObservationAsset.cpp.obj"
 		]
 	}
 }

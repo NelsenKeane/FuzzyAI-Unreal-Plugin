@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.FuzzyAIDebugger.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"FuzzyAIDebugger.cpp.obj"
+		]
+	}
+}

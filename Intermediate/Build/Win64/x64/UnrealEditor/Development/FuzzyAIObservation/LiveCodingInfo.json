@@ -1,0 +1,22 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.FuzzyAIObservation.cpp.obj": [
+			"FuzzyAIObservation.init.gen.cpp.obj",
+			"ObservationAsset.gen.cpp.obj",
+			"ObservationMemory.gen.cpp.obj",
+			"ObservationResultLibrary.gen.cpp.obj",
+			"ObservationRuntime.gen.cpp.obj",
+			"ObservationRuntimeTypes.gen.cpp.obj",
+			"ObservationTypes.gen.cpp.obj",
+			"StandardObservations.gen.cpp.obj",
+			"PerModuleInline.gen.cpp.obj",
+			"FuzzyAIObservation.cpp.obj",
+			"ObservationAsset.cpp.obj",
+			"ObservationMemory.cpp.obj",
+			"ObservationResultLibrary.cpp.obj",
+			"ObservationRuntime.cpp.obj",
+			"StandardObservations.cpp.obj"
+		]
+	}
+}

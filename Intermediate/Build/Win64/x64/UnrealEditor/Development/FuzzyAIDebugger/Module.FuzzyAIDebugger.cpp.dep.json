@@ -1,0 +1,15 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaidebugger\\module.fuzzyaidebugger.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\unreal projects\\gameanimationsample\\intermediate\\build\\win64\\x64\\gameanimationsampleeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_4.h.pch",
+        "Includes": [
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaidebugger\\definitions.fuzzyaidebugger.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaidebugger\\permoduleinline.gen.cpp",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

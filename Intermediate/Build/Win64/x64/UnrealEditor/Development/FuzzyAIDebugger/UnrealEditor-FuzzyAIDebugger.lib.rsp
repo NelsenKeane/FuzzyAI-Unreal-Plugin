@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-FuzzyAIDebugger.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"D:/Unreal Projects/GameAnimationSample/Intermediate/Build/Win64/x64/GameAnimationSampleEditor/Development/UnrealEd/SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.InclOrderUnreal5_4.h.obj"
+"D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Intermediate/Build/Win64/x64/UnrealEditor/Development/FuzzyAIDebugger/Module.FuzzyAIDebugger.cpp.obj"
+"D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Intermediate/Build/Win64/x64/UnrealEditor/Development/FuzzyAIDebugger/FuzzyAIDebugger.cpp.obj"
+"D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Intermediate/Build/Win64/x64/UnrealEditor/Development/FuzzyAIDebugger/Default.rc2.res"
+/OUT:"D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Intermediate/Build/Win64/x64/UnrealEditor/Development/FuzzyAIDebugger/UnrealEditor-FuzzyAIDebugger.lib"

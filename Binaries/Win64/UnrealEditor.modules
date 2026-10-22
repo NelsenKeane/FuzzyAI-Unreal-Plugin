@@ -2,6 +2,12 @@
 	"BuildId": "47537391",
 	"Modules": 
 	{
-		"FuzzyAI": "UnrealEditor-FuzzyAI.dll"
+		"FuzzyAI": "UnrealEditor-FuzzyAI.dll",
+		"FuzzyAIDebugger": "UnrealEditor-FuzzyAIDebugger.dll",
+		"FuzzyAIEditor": "UnrealEditor-FuzzyAIEditor.dll",
+		"FuzzyAIInterpretation": "UnrealEditor-FuzzyAIInterpretation.dll",
+		"FuzzyAIObservation": "UnrealEditor-FuzzyAIObservation.dll",
+		"FuzzyAIRuntime": "UnrealEditor-FuzzyAIRuntime.dll",
+		"FuzzyAIUtility": "UnrealEditor-FuzzyAIUtility.dll"
 	}
 }

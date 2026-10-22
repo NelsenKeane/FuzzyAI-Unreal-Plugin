@@ -16,8 +16,13 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "FuzzyAI",
+			"Name": "FuzzyAIRuntime",
 			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "FuzzyAIEditor",
+			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
 	]
