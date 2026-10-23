@@ -1,7 +1,10 @@
+// Retains successful readings, records repeated events and removes expired, destroyed-target or excess entries.
+// Reports meaningful remembered-value changes while keeping current observation validity separate.
+
 #include "Observation/ObservationMemory.h"
-#include "Observation/ObservationRuntime.h"
 #include "GameFramework/Actor.h"
 
+#pragma region Initialization and Reset
 void UFuzzyAIObservationMemory::Initialize(int32 InMaxRecords, int32 InMaxEvents, float InEventMaxAge)
 {
     Reset();
@@ -17,6 +20,8 @@ void UFuzzyAIObservationMemory::Reset()
     Events.Reset();
 }
 
+#pragma endregion
+#pragma region Remembered Facts and Expiry
 void UFuzzyAIObservationMemory::Remember(const FFuzzyAIObservationRecord& Record, float Duration, float Tolerance,
     TArray<FName>& OutChangedKeys)
 {
@@ -30,7 +35,7 @@ void UFuzzyAIObservationMemory::Remember(const FFuzzyAIObservationRecord& Record
             Item.Observation.Target == Record.Target;
     });
     const bool bChanged = RecordIndex == INDEX_NONE ||
-        !UFuzzyAIObservationRuntime::Equivalent(NotificationBaselines[RecordIndex].Result, Record.Result, Tolerance);
+        !FFuzzyAIObservationResult::Equivalent(NotificationBaselines[RecordIndex].Result, Record.Result, Tolerance);
     if (RecordIndex == INDEX_NONE)
     {
         if (Records.Num() >= MaxRecords)
@@ -81,6 +86,8 @@ void UFuzzyAIObservationMemory::Prune(double Time, TArray<FName>& OutChangedKeys
     }
 }
 
+#pragma endregion
+#pragma region Remembered Fact Reads
 bool UFuzzyAIObservationMemory::TryGetObservation(FName Key, AActor* Target, double Time,
     FFuzzyAIRememberedObservation& OutRecord) const
 {
@@ -113,6 +120,8 @@ TArray<FFuzzyAIRememberedObservation> UFuzzyAIObservationMemory::GetSnapshot(dou
     return Snapshot;
 }
 
+#pragma endregion
+#pragma region Observed Event History
 FFuzzyAIObservedEvent UFuzzyAIObservationMemory::RecordEvent(const FFuzzyAIObservedEvent& Event, double Time)
 {
     FFuzzyAIObservedEvent Stored = Event;
@@ -142,3 +151,4 @@ TArray<FFuzzyAIObservedEvent> UFuzzyAIObservationMemory::GetEvents(double Time) 
     }
     return Snapshot;
 }
+#pragma endregion

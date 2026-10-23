@@ -1,3 +1,6 @@
+// Defines the actor context, supported value types and validity-aware result used when collecting observations.
+// These are data containers; collection, storage and memory are handled by other classes.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -6,6 +9,7 @@
 
 class AActor;
 
+#pragma region Value Types and Subjects
 UENUM(BlueprintType)
 enum class EFuzzyAIObservationValueType : uint8
 {
@@ -25,6 +29,8 @@ enum class EFuzzyAIObservationSubject : uint8
     Custom
 };
 
+#pragma endregion
+#pragma region Observation Context
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAIObservationContext
 {
@@ -45,6 +51,8 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationContext
     TArray<TObjectPtr<AActor>> Subjects;
 };
 
+#pragma endregion
+#pragma region Typed Observation Result
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAIObservationResult
 {
@@ -76,4 +84,14 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationResult
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Observation")
     FString FailureReason;
+
+    static FFuzzyAIObservationResult MakeFloat(float Value);
+    static FFuzzyAIObservationResult MakeInteger(int32 Value);
+    static FFuzzyAIObservationResult MakeBoolean(bool Value);
+    static FFuzzyAIObservationResult MakeVector(FVector Value);
+    static FFuzzyAIObservationResult MakeObject(UObject* Value);
+    static FFuzzyAIObservationResult MakeGameplayTag(FGameplayTag Value);
+    static FFuzzyAIObservationResult MakeInvalid(const FString& Reason);
+    static bool Equivalent(const FFuzzyAIObservationResult& A, const FFuzzyAIObservationResult& B, float Tolerance);
 };
+#pragma endregion

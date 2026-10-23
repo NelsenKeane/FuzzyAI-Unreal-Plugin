@@ -1,21 +1,21 @@
+// Validates and duplicates sensor templates, then selects which instances need to sample.
+// Runs their lifecycle/context hooks and wraps each sample in a store transaction with visibility checks.
+
 #include "Observation/FuzzyObservationManager.h"
 #include "Observation/FuzzyObservationStore.h"
 #include "FuzzyAIComponent.h"
 #include "GameFramework/Actor.h"
 
+#pragma region Configuration and Sensor Lifecycle
 bool UFuzzyObservationManager::Initialize(const TArray<TObjectPtr<UFuzzyObservation>>& Templates, UFuzzyAIComponent* Owner,
-    const TArray<FName>& LegacyKeys, TArray<FString>& OutErrors)
+    TArray<FString>& OutErrors)
 {
     Shutdown();
     Instances.Reset();
     NextUpdateTimes.Reset();
+    OutErrors.Reset();
     TSet<FName> Ids;
     TSet<FName> Outputs;
-    for (FName Key : LegacyKeys)
-    {
-        Ids.Add(Key);
-        Outputs.Add(Key);
-    }
     for (UFuzzyObservation* Template : Templates)
     {
         if (!IsValid(Template))
@@ -79,6 +79,8 @@ void UFuzzyObservationManager::Shutdown()
     }
 }
 
+#pragma endregion
+#pragma region Scheduling
 TArray<FName> UFuzzyObservationManager::GetIds() const
 {
     TArray<FName> Ids;
@@ -134,6 +136,8 @@ bool UFuzzyObservationManager::NeedsEveryFrame() const
     return Instances.ContainsByPredicate([](UFuzzyObservation* Instance) { return Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::EveryFrame; });
 }
 
+#pragma endregion
+#pragma region Sensor Lookup
 UFuzzyObservation* UFuzzyObservationManager::FindObservation(FName IdOrKey, const UFuzzyObservationStore* Store) const
 {
     for (UFuzzyObservation* Instance : Instances)
@@ -151,6 +155,8 @@ bool UFuzzyObservationManager::Contains(const UFuzzyObservation* Observation) co
     return Instances.Contains(Observation);
 }
 
+#pragma endregion
+#pragma region Sampling
 void UFuzzyObservationManager::Sample(const TArray<FName>& Ids, UFuzzyObservationStore* Store,
     const FFuzzyAIObservationContext& Context, int32 Revision, double Time)
 {
@@ -180,3 +186,4 @@ void UFuzzyObservationManager::Sample(const TArray<FName>& Ids, UFuzzyObservatio
         NextUpdateTimes.Add(Instance->GetId(), Time + Instance->Interval);
     }
 }
+#pragma endregion

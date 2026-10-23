@@ -287,6 +287,8 @@
 /I "D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Intermediate/Build/Win64/UnrealEditor/Inc/FuzzyAIRuntime/UHT"
 /I "D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Source"
 /I "D:/Unreal Projects/GameAnimationSample/Plugins/FuzzyAI/Source/FuzzyAIRuntime/Public"
+/I "Editor/WorkspaceMenuStructure/Public"
+/I "Editor/EditorStyle/Public"
 /I "D:/Unreal Projects/GameAnimationSample/Intermediate/Build/Win64/x64/GameAnimationSampleEditor/Development/UnrealEd"
 /external:W0
 /external:I "ThirdParty/GuidelinesSupportLibrary/GSL-1144/include"

@@ -18,35 +18,34 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 class AActor;
 class UFuzzyObservation;
 class UFuzzyObservationStore;
-struct FFuzzyAIDebugSnapshot;
 struct FFuzzyAIObservationRecord;
 struct FFuzzyAIObservedEvent;
 struct FFuzzyAIRememberedObservation;
 struct FFuzzyAITargetLocationKnowledge;
 
 // ********** Begin Delegate FFuzzyAIObservationChanged ********************************************
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_19_DELEGATE \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_18_DELEGATE \
 FUZZYAIRUNTIME_API void FFuzzyAIObservationChanged_DelegateWrapper(const FMulticastScriptDelegate& FuzzyAIObservationChanged, FName Key, FFuzzyAIObservationRecord const& Previous, FFuzzyAIObservationRecord const& Current, bool bHadPrevious);
 
 
 // ********** End Delegate FFuzzyAIObservationChanged **********************************************
 
 // ********** Begin Delegate FFuzzyAIObservationsChanged *******************************************
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_20_DELEGATE \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_19_DELEGATE \
 FUZZYAIRUNTIME_API void FFuzzyAIObservationsChanged_DelegateWrapper(const FMulticastScriptDelegate& FuzzyAIObservationsChanged, TArray<FName> const& ChangedKeys);
 
 
 // ********** End Delegate FFuzzyAIObservationsChanged *********************************************
 
 // ********** Begin Delegate FFuzzyAIObservedEventRecorded *****************************************
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_21_DELEGATE \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_20_DELEGATE \
 FUZZYAIRUNTIME_API void FFuzzyAIObservedEventRecorded_DelegateWrapper(const FMulticastScriptDelegate& FuzzyAIObservedEventRecorded, FFuzzyAIObservedEvent const& Event);
 
 
 // ********** End Delegate FFuzzyAIObservedEventRecorded *******************************************
 
 // ********** Begin Class UFuzzyAIComponent ********************************************************
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execHandleTargetDestroyed); \
 	DECLARE_FUNCTION(execClearMemory); \
 	DECLARE_FUNCTION(execGetObservedEvents); \
@@ -70,14 +69,13 @@ FUZZYAIRUNTIME_API void FFuzzyAIObservedEventRecorded_DelegateWrapper(const FMul
 	DECLARE_FUNCTION(execGetConfigurationErrors); \
 	DECLARE_FUNCTION(execIsObserving); \
 	DECLARE_FUNCTION(execStopAI); \
-	DECLARE_FUNCTION(execStartAI); \
-	DECLARE_FUNCTION(execPreviewDecisionPipeline);
+	DECLARE_FUNCTION(execStartAI);
 
 
 struct Z_Construct_UClass_UFuzzyAIComponent_Statics;
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIComponent_NoRegister();
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_INCLASS_NO_PURE_DECLS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUFuzzyAIComponent(); \
 	friend struct ::Z_Construct_UClass_UFuzzyAIComponent_Statics; \
@@ -88,7 +86,7 @@ public: \
 	DECLARE_SERIALIZER(UFuzzyAIComponent)
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_ENHANCED_CONSTRUCTORS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_ENHANCED_CONSTRUCTORS \
 	/** Deleted move- and copy-constructors, should never be used */ \
 	UFuzzyAIComponent(UFuzzyAIComponent&&) = delete; \
 	UFuzzyAIComponent(const UFuzzyAIComponent&) = delete; \
@@ -98,13 +96,13 @@ public: \
 	NO_API virtual ~UFuzzyAIComponent();
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_24_PROLOG
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_GENERATED_BODY \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_23_PROLOG
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_INCLASS_NO_PURE_DECLS \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_27_ENHANCED_CONSTRUCTORS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_INCLASS_NO_PURE_DECLS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Core_FuzzyAIComponent_h_26_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 

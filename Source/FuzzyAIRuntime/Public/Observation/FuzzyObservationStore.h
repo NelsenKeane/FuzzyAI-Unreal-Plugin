@@ -1,3 +1,6 @@
+// Declares the per-enemy typed store used by sensors to publish current facts and by consumers to read snapshots.
+// Managed sample transactions validate writes and expose committed values with timestamps and change information.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,6 +14,7 @@ class FUZZYAIRUNTIME_API UFuzzyObservationStore : public UObject
     GENERATED_BODY()
 
 public:
+    #pragma region Typed Writes and Invalidation
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
     bool SetFloat(FName Key, float Value);
 
@@ -35,6 +39,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
     bool Invalidate(FName Key, const FString& Reason);
 
+    #pragma endregion
+    #pragma region Typed Reads and Diagnostics
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
     bool GetFloat(FName Key, float& OutValue) const;
 
@@ -62,18 +68,22 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
     TArray<FString> GetWriteErrors() const { return WriteErrors; }
 
+    #pragma endregion
+    #pragma region Managed Sampling Transactions
     void Reset();
     void BeginBatch(double Time);
     void BeginSample(UObject* Writer, FName PrimaryKey, EFuzzyAIObservationValueType PrimaryType,
-        const FFuzzyAIObservationEntry& Settings, bool bTargetDependent,
+        const FFuzzyAIObservationSettings& Settings, bool bTargetDependent,
         const FFuzzyAIObservationContext& Context, int32 ContextRevision);
     void EndSample();
     void InvalidateCurrentSample(const FString& Reason);
     TArray<FFuzzyAIObservationChange> Commit(TArray<FName>& OutSampledKeys);
-    const FFuzzyAIObservationEntry* FindSettings(FName Key) const;
+    const FFuzzyAIObservationSettings* FindSettings(FName Key) const;
     UObject* FindWriter(FName Key) const;
 
+    #pragma endregion
 private:
+    #pragma region Records and Output Ownership
     UPROPERTY(Transient)
     TMap<FName, FFuzzyAIObservationRecord> Records;
 
@@ -84,7 +94,7 @@ private:
     TMap<FName, FFuzzyAIObservationRecord> Pending;
 
     UPROPERTY(Transient)
-    TMap<FName, FFuzzyAIObservationEntry> SettingsByKey;
+    TMap<FName, FFuzzyAIObservationSettings> SettingsByKey;
 
     UPROPERTY(Transient)
     TMap<FName, TWeakObjectPtr<UObject>> Writers;
@@ -92,13 +102,16 @@ private:
     UPROPERTY(Transient)
     TArray<FString> WriteErrors;
 
+    #pragma endregion
+    #pragma region Active Transaction State
     TArray<FName> PendingOrder;
     TSet<FName> Conflicts;
     TWeakObjectPtr<UObject> ActiveWriter;
     FFuzzyAIObservationRecord SampleMetadata;
-    FFuzzyAIObservationEntry ActiveSettings;
+    FFuzzyAIObservationSettings ActiveSettings;
     FName ActivePrimaryKey;
     EFuzzyAIObservationValueType ActivePrimaryType = EFuzzyAIObservationValueType::Float;
     double BatchTime = 0.;
     bool bBatchOpen = false;
+    #pragma endregion
 };

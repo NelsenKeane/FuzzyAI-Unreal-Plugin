@@ -1,7 +1,8 @@
+// Coordinates observation startup, sampling, timers, memory updates and change dispatchers for one enemy.
+// Exposes cached observation reads and cleans up timers, bindings and sensor work on shutdown.
+
 #include "FuzzyAIComponent.h"
-#include "Core/FuzzyAIPipeline.h"
 #include "Observation/ObservationMemory.h"
-#include "Observation/ObservationRuntime.h"
 #include "Observation/FuzzyObservation.h"
 #include "Observation/FuzzyObservationManager.h"
 #include "Observation/FuzzyObservationStore.h"
@@ -12,35 +13,11 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogFuzzyAIRuntime, Log, All);
 
+#pragma region Engine Lifecycle and World Time
 UFuzzyAIComponent::UFuzzyAIComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
     PrimaryComponentTick.bStartWithTickEnabled = false;
-}
-
-FFuzzyAIDebugSnapshot UFuzzyAIComponent::PreviewDecisionPipeline()
-{
-    FFuzzyAIDecisionContext Context;
-    Context.Observer = GetOwner();
-    Context.Target = CurrentTarget;
-    Context.bTargetVisible = bRunning && bTargetVisible && CurrentTarget.IsValid();
-    Context.CapturedAt = Now();
-    Context.Observations = GetObservationSnapshot();
-    Context.Memories = GetMemorySnapshot();
-    Context.Events = GetObservedEvents();
-    if (!bRunning)
-    {
-        FFuzzyAIDebugSnapshot Snapshot;
-        Snapshot.Evidence = MoveTemp(Context);
-        Snapshot.ProfileStage = FFuzzyAIStageResult::Make(EFuzzyAIStageStatus::NotReady, TEXT("Start AI before previewing the decision pipeline."));
-        Snapshot.ExecutionStage = FFuzzyAIStageResult::Make(EFuzzyAIStageStatus::NotRun, TEXT("Preview does not execute actions."));
-        return Snapshot;
-    }
-    if (!PrototypePipeline)
-    {
-        PrototypePipeline = NewObject<UFuzzyAIPipeline>(this);
-    }
-    return PrototypePipeline->Preview(Context, DecisionConfig);
 }
 
 void UFuzzyAIComponent::BeginPlay()
@@ -73,6 +50,8 @@ double UFuzzyAIComponent::Now() const
     return GetWorld() ? GetWorld()->GetTimeSeconds() : 0.;
 }
 
+#pragma endregion
+#pragma region Observation Lifecycle
 bool UFuzzyAIComponent::StartAI()
 {
     if (bEndingPlay || !GetWorld() || !IsValid(GetOwner()) || (bServerOnly && !GetOwner()->HasAuthority()))
@@ -88,24 +67,14 @@ bool UFuzzyAIComponent::StartAI()
     {
         return true;
     }
-    if (!ObservationRuntime)
+    if (!ObservationManager)
     {
-        ObservationRuntime = NewObject<UFuzzyAIObservationRuntime>(this);
         MemoryRuntime = NewObject<UFuzzyAIObservationMemory>(this);
         ObservationStore = NewObject<UFuzzyObservationStore>(this);
         ObservationManager = NewObject<UFuzzyObservationManager>(this);
     }
-    if (!ObservationRuntime->Initialize(Observations, ConfigurationErrors))
+    if (!ObservationManager->Initialize(ObservationInstances, this, ConfigurationErrors))
     {
-        for (const FString& Error : ConfigurationErrors)
-        {
-            UE_LOG(LogFuzzyAIRuntime, Error, TEXT("%s: %s"), *GetNameSafe(GetOwner()), *Error);
-        }
-        return false;
-    }
-    if (!ObservationManager->Initialize(ObservationInstances, this, ObservationRuntime->GetKeys(), ConfigurationErrors))
-    {
-        ObservationRuntime->Reset();
         for (const FString& Error : ConfigurationErrors)
         {
             UE_LOG(LogFuzzyAIRuntime, Error, TEXT("%s: %s"), *GetNameSafe(GetOwner()), *Error);
@@ -115,7 +84,6 @@ bool UFuzzyAIComponent::StartAI()
     if (!FMath::IsFinite(ObservedEventMaxAge) || ObservedEventMaxAge < 0.f || MaxRememberedObservations < 1 || MaxObservedEvents < 1)
     {
         ConfigurationErrors.Add(TEXT("Memory capacities must be positive and event age must be finite and nonnegative."));
-        ObservationRuntime->Reset();
         return false;
     }
     MemoryRuntime->Initialize(MaxRememberedObservations, MaxObservedEvents, ObservedEventMaxAge);
@@ -126,8 +94,8 @@ bool UFuzzyAIComponent::StartAI()
         ObservationManager->Start(this, ObservationStore, MakeContext());
     }
     GetWorld()->GetTimerManager().SetTimer(SchedulerHandle, this, &UFuzzyAIComponent::SchedulerUpdate,
-        FMath::Min(ObservationRuntime->GetSchedulerInterval(), ObservationManager->GetSchedulerInterval()), true);
-    SetComponentTickEnabled(ObservationRuntime->NeedsEveryFrame() || ObservationManager->NeedsEveryFrame());
+        ObservationManager->GetSchedulerInterval(), true);
+    SetComponentTickEnabled(ObservationManager->NeedsEveryFrame());
     RefreshAllObservations();
     return true;
 }
@@ -154,6 +122,8 @@ void UFuzzyAIComponent::StopAI()
     DeferredActions.Reset();
 }
 
+#pragma endregion
+#pragma region Deferred Actions
 void UFuzzyAIComponent::Defer(TFunction<void()>&& Action)
 {
     if (!bEndingPlay && GetWorld())
@@ -179,6 +149,8 @@ void UFuzzyAIComponent::Defer(TFunction<void()>&& Action)
     }
 }
 
+#pragma endregion
+#pragma region Observation Context
 FFuzzyAIObservationContext UFuzzyAIComponent::MakeContext() const
 {
     FFuzzyAIObservationContext Context;
@@ -192,6 +164,8 @@ FFuzzyAIObservationContext UFuzzyAIComponent::MakeContext() const
     return Context;
 }
 
+#pragma endregion
+#pragma region Sampling and Refresh Requests
 void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& Keys)
 {
     if (!bRunning || bEndingPlay)
@@ -210,28 +184,15 @@ void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& Keys)
     TArray<FName> Sampled;
     const FFuzzyAIObservationContext Context = MakeContext();
     ObservationStore->BeginBatch(Time);
-    ObservationRuntime->Refresh(Keys, Context, ContextRevision, Time, Sampled);
-    for (FName Key : Sampled)
-    {
-        const FFuzzyAIObservationEntry* Entry = ObservationRuntime->FindEntry(Key);
-        FFuzzyAIObservationRecord Record;
-        if (Entry && ObservationRuntime->TryGetObservation(Key, Record))
-        {
-            ObservationStore->BeginSample(Entry->Observation, Key, Entry->Observation->ExpectedValueType, *Entry,
-                UFuzzyAIObservationRuntime::IsTargetDependent(*Entry), Context, ContextRevision);
-            ObservationStore->SetResult(Key, Record.Result);
-            ObservationStore->EndSample();
-        }
-    }
     ObservationManager->Sample(Keys, ObservationStore, Context, ContextRevision, Time);
     const TArray<FFuzzyAIObservationChange> Changes = ObservationStore->Commit(Sampled);
     for (FName Key : Sampled)
     {
-        const FFuzzyAIObservationEntry* Entry = ObservationStore->FindSettings(Key);
+        const FFuzzyAIObservationSettings* Settings = ObservationStore->FindSettings(Key);
         FFuzzyAIObservationRecord Record;
-        if (Entry && Entry->bRememberLastSuccessful && ObservationStore->TryGetObservation(Key, Record))
+        if (Settings && Settings->bRememberLastSuccessful && ObservationStore->TryGetObservation(Key, Record))
         {
-            MemoryRuntime->Remember(Record, Entry->MemoryDuration, Entry->ChangeTolerance, MemoryChanged);
+            MemoryRuntime->Remember(Record, Settings->MemoryDuration, Settings->ChangeTolerance, MemoryChanged);
         }
     }
     TArray<FName> ChangedKeys;
@@ -268,11 +229,6 @@ bool UFuzzyAIComponent::RequestObservationRefresh(FName Key)
     {
         return false;
     }
-    if (ObservationRuntime->FindEntry(Key))
-    {
-        ProcessRefresh({Key});
-        return true;
-    }
     if (UFuzzyObservation* Instance = ObservationManager->FindObservation(Key, ObservationStore))
     {
         return RequestObservationInstanceRefresh(Instance);
@@ -282,11 +238,6 @@ bool UFuzzyAIComponent::RequestObservationRefresh(FName Key)
 
 bool UFuzzyAIComponent::NotifyObservationSourceChanged(FName Key)
 {
-    const FFuzzyAIObservationEntry* Entry = bRunning ? ObservationRuntime->FindEntry(Key) : nullptr;
-    if (Entry)
-    {
-        return Entry->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::SourceEvent && RequestObservationRefresh(Key);
-    }
     UFuzzyObservation* Instance = bRunning ? ObservationManager->FindObservation(Key, ObservationStore) : nullptr;
     return Instance && Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::SourceEvent && RequestObservationInstanceRefresh(Instance);
 }
@@ -301,6 +252,8 @@ bool UFuzzyAIComponent::RequestObservationInstanceRefresh(UFuzzyObservation* Obs
     return true;
 }
 
+#pragma endregion
+#pragma region Sensor Lookup and Scheduling
 TArray<UFuzzyObservation*> UFuzzyAIComponent::GetRuntimeObservationInstances() const
 {
     TArray<UFuzzyObservation*> Instances;
@@ -316,18 +269,14 @@ TArray<UFuzzyObservation*> UFuzzyAIComponent::GetRuntimeObservationInstances() c
 
 TArray<FName> UFuzzyAIComponent::GetRefreshKeys(bool bContextOnly) const
 {
-    TArray<FName> Keys = bContextOnly ? ObservationRuntime->GetTargetDependentKeys() : ObservationRuntime->GetKeys();
-    Keys.Append(bContextOnly ? ObservationManager->GetContextDependentIds() : ObservationManager->GetIds());
-    return Keys;
+    return bContextOnly ? ObservationManager->GetContextDependentIds() : ObservationManager->GetIds();
 }
 
 void UFuzzyAIComponent::SchedulerUpdate()
 {
     if (bRunning)
     {
-        TArray<FName> Keys = ObservationRuntime->GetDueKeys(Now(), false);
-        Keys.Append(ObservationManager->GetDueIds(Now(), false));
-        ProcessRefresh(Keys);
+        ProcessRefresh(ObservationManager->GetDueIds(Now(), false));
     }
 }
 
@@ -336,12 +285,12 @@ void UFuzzyAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     if (bRunning)
     {
-        TArray<FName> Keys = ObservationRuntime->GetDueKeys(Now(), true);
-        Keys.Append(ObservationManager->GetDueIds(Now(), true));
-        ProcessRefresh(Keys);
+        ProcessRefresh(ObservationManager->GetDueIds(Now(), true));
     }
 }
 
+#pragma endregion
+#pragma region Target and Subject Context
 AActor* UFuzzyAIComponent::GetTarget() const
 {
     return CurrentTarget.Get();
@@ -449,6 +398,8 @@ void UFuzzyAIComponent::SetObservationSubjects(const TArray<AActor*>& Subjects)
     }
 }
 
+#pragma endregion
+#pragma region Current Observation Reads
 bool UFuzzyAIComponent::TryGetObservation(FName Key, FFuzzyAIObservationRecord& OutRecord) const
 {
     OutRecord = FFuzzyAIObservationRecord();
@@ -460,6 +411,8 @@ TArray<FFuzzyAIObservationRecord> UFuzzyAIComponent::GetObservationSnapshot() co
     return ObservationStore ? ObservationStore->GetSnapshot() : TArray<FFuzzyAIObservationRecord>();
 }
 
+#pragma endregion
+#pragma region Remembered Knowledge
 bool UFuzzyAIComponent::TryGetRememberedObservation(FName Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const
 {
     OutRecord = FFuzzyAIRememberedObservation();
@@ -494,6 +447,8 @@ FFuzzyAITargetLocationKnowledge UFuzzyAIComponent::GetTargetLocationKnowledge(FN
     return Knowledge;
 }
 
+#pragma endregion
+#pragma region Observed Event History
 bool UFuzzyAIComponent::RecordObservedEvent(const FFuzzyAIObservedEvent& Event)
 {
     if (!bRunning || Event.EventKey.IsNone())
@@ -533,6 +488,8 @@ TArray<FFuzzyAIObservedEvent> UFuzzyAIComponent::GetObservedEvents() const
     return MemoryRuntime ? MemoryRuntime->GetEvents(Now()) : TArray<FFuzzyAIObservedEvent>();
 }
 
+#pragma endregion
+#pragma region Clear Memory
 void UFuzzyAIComponent::ClearMemory()
 {
     if (bProcessing)
@@ -555,3 +512,4 @@ void UFuzzyAIComponent::ClearMemory()
         }
     }
 }
+#pragma endregion

@@ -15,11 +15,10 @@ void EmptyLinkFunctionForGeneratedCodeObservationRuntimeTypes() {}
 // ********** Begin Cross Module References ********************************************************
 COREUOBJECT_API UScriptStruct* Z_Construct_UScriptStruct_FVector();
 ENGINE_API UClass* Z_Construct_UClass_AActor_NoRegister();
-FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIObservationAsset_NoRegister();
 FUZZYAIRUNTIME_API UEnum* Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationUpdatePolicy();
-FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationEntry();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationRecord();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationResult();
+FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationSettings();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservedEvent();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAITargetLocationKnowledge();
@@ -82,54 +81,20 @@ UEnum* Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationUpdatePolicy()
 }
 // ********** End Enum EFuzzyAIObservationUpdatePolicy *********************************************
 
-// ********** Begin ScriptStruct FFuzzyAIObservationEntry ******************************************
-struct Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics
+// ********** Begin ScriptStruct FFuzzyAIObservationSettings ***************************************
+struct Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics
 {
-	static inline consteval int32 GetStructSize() { return sizeof(FFuzzyAIObservationEntry); }
-	static inline consteval int16 GetStructAlignment() { return alignof(FFuzzyAIObservationEntry); }
+	static inline consteval int32 GetStructSize() { return sizeof(FFuzzyAIObservationSettings); }
+	static inline consteval int16 GetStructAlignment() { return alignof(FFuzzyAIObservationSettings); }
 #if WITH_METADATA
 	static constexpr UECodeGen_Private::FMetaDataPairParam Struct_MetaDataParams[] = {
 		{ "BlueprintType", "true" },
-		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_Observation_MetaData[] = {
-		{ "Category", "Observation" },
-		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_UpdatePolicy_MetaData[] = {
-		{ "Category", "Observation" },
-		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_Interval_MetaData[] = {
-		{ "Category", "Observation" },
-		{ "ClampMin", "0.01" },
-		{ "EditCondition", "UpdatePolicy == EFuzzyAIObservationUpdatePolicy::Interval" },
 		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ChangeTolerance_MetaData[] = {
 		{ "Category", "Observation" },
 		{ "ClampMin", "0" },
 		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bRequiresVisibleTarget_MetaData[] = {
-		{ "Category", "Observation" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Gates the read before calling Blueprint, so an unseen target cannot leak live data. */" },
-#endif
-		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Gates the read before calling Blueprint, so an unseen target cannot leak live data." },
-#endif
-	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bUsesTargetContext_MetaData[] = {
-		{ "Category", "Observation" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Enable for Custom readers that use Target or Subjects. Target subjects are automatic. */" },
-#endif
-		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Enable for Custom readers that use Target or Subjects. Target subjects are automatic." },
-#endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bRememberLastSuccessful_MetaData[] = {
 		{ "Category", "Memory" },
@@ -149,94 +114,66 @@ struct Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics
 	};
 #endif // WITH_METADATA
 
-// ********** Begin ScriptStruct FFuzzyAIObservationEntry constinit property declarations **********
-	static const UECodeGen_Private::FObjectPropertyParams NewProp_Observation;
-	static const UECodeGen_Private::FBytePropertyParams NewProp_UpdatePolicy_Underlying;
-	static const UECodeGen_Private::FEnumPropertyParams NewProp_UpdatePolicy;
-	static const UECodeGen_Private::FFloatPropertyParams NewProp_Interval;
+// ********** Begin ScriptStruct FFuzzyAIObservationSettings constinit property declarations *******
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ChangeTolerance;
-	static void NewProp_bRequiresVisibleTarget_SetBit(void* Obj);
-	static const UECodeGen_Private::FBoolPropertyParams NewProp_bRequiresVisibleTarget;
-	static void NewProp_bUsesTargetContext_SetBit(void* Obj);
-	static const UECodeGen_Private::FBoolPropertyParams NewProp_bUsesTargetContext;
 	static void NewProp_bRememberLastSuccessful_SetBit(void* Obj);
 	static const UECodeGen_Private::FBoolPropertyParams NewProp_bRememberLastSuccessful;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_MemoryDuration;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
-// ********** End ScriptStruct FFuzzyAIObservationEntry constinit property declarations ************
+// ********** End ScriptStruct FFuzzyAIObservationSettings constinit property declarations *********
 	static void* NewStructOps()
 	{
-		return (UScriptStruct::ICppStructOps*)new UScriptStruct::TCppStructOps<FFuzzyAIObservationEntry>();
+		return (UScriptStruct::ICppStructOps*)new UScriptStruct::TCppStructOps<FFuzzyAIObservationSettings>();
 	}
 	static const UECodeGen_Private::FStructParams StructParams;
-}; // struct Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics
-static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry;
-class UScriptStruct* FFuzzyAIObservationEntry::StaticStruct()
+}; // struct Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics
+static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings;
+class UScriptStruct* FFuzzyAIObservationSettings::StaticStruct()
 {
-	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.OuterSingleton)
+	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.OuterSingleton)
 	{
-		Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.OuterSingleton = GetStaticStruct(Z_Construct_UScriptStruct_FFuzzyAIObservationEntry, (UObject*)Z_Construct_UPackage__Script_FuzzyAIRuntime(), TEXT("FuzzyAIObservationEntry"));
+		Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.OuterSingleton = GetStaticStruct(Z_Construct_UScriptStruct_FFuzzyAIObservationSettings, (UObject*)Z_Construct_UPackage__Script_FuzzyAIRuntime(), TEXT("FuzzyAIObservationSettings"));
 	}
-	return Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.OuterSingleton;
+	return Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.OuterSingleton;
 	}
 
-// ********** Begin ScriptStruct FFuzzyAIObservationEntry Property Definitions *********************
-const UECodeGen_Private::FObjectPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_Observation = { "Observation", nullptr, (EPropertyFlags)0x0114000000000015, UECodeGen_Private::EPropertyGenFlags::Object | UECodeGen_Private::EPropertyGenFlags::ObjectPtr, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationEntry, Observation), Z_Construct_UClass_UFuzzyAIObservationAsset_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Observation_MetaData), NewProp_Observation_MetaData) };
-const UECodeGen_Private::FBytePropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_UpdatePolicy_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
-const UECodeGen_Private::FEnumPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_UpdatePolicy = { "UpdatePolicy", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationEntry, UpdatePolicy), Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationUpdatePolicy, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_UpdatePolicy_MetaData), NewProp_UpdatePolicy_MetaData) }; // 3443719267
-const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_Interval = { "Interval", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationEntry, Interval), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Interval_MetaData), NewProp_Interval_MetaData) };
-const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_ChangeTolerance = { "ChangeTolerance", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationEntry, ChangeTolerance), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ChangeTolerance_MetaData), NewProp_ChangeTolerance_MetaData) };
-void Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRequiresVisibleTarget_SetBit(void* Obj)
+// ********** Begin ScriptStruct FFuzzyAIObservationSettings Property Definitions ******************
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_ChangeTolerance = { "ChangeTolerance", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationSettings, ChangeTolerance), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ChangeTolerance_MetaData), NewProp_ChangeTolerance_MetaData) };
+void Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_bRememberLastSuccessful_SetBit(void* Obj)
 {
-	((FFuzzyAIObservationEntry*)Obj)->bRequiresVisibleTarget = 1;
+	((FFuzzyAIObservationSettings*)Obj)->bRememberLastSuccessful = 1;
 }
-const UECodeGen_Private::FBoolPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRequiresVisibleTarget = { "bRequiresVisibleTarget", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(FFuzzyAIObservationEntry), &Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRequiresVisibleTarget_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bRequiresVisibleTarget_MetaData), NewProp_bRequiresVisibleTarget_MetaData) };
-void Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bUsesTargetContext_SetBit(void* Obj)
-{
-	((FFuzzyAIObservationEntry*)Obj)->bUsesTargetContext = 1;
-}
-const UECodeGen_Private::FBoolPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bUsesTargetContext = { "bUsesTargetContext", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(FFuzzyAIObservationEntry), &Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bUsesTargetContext_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bUsesTargetContext_MetaData), NewProp_bUsesTargetContext_MetaData) };
-void Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRememberLastSuccessful_SetBit(void* Obj)
-{
-	((FFuzzyAIObservationEntry*)Obj)->bRememberLastSuccessful = 1;
-}
-const UECodeGen_Private::FBoolPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRememberLastSuccessful = { "bRememberLastSuccessful", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(FFuzzyAIObservationEntry), &Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRememberLastSuccessful_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bRememberLastSuccessful_MetaData), NewProp_bRememberLastSuccessful_MetaData) };
-const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_MemoryDuration = { "MemoryDuration", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationEntry, MemoryDuration), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MemoryDuration_MetaData), NewProp_MemoryDuration_MetaData) };
-const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::PropPointers[] = {
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_Observation,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_UpdatePolicy_Underlying,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_UpdatePolicy,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_Interval,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_ChangeTolerance,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRequiresVisibleTarget,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bUsesTargetContext,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_bRememberLastSuccessful,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewProp_MemoryDuration,
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_bRememberLastSuccessful = { "bRememberLastSuccessful", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(FFuzzyAIObservationSettings), &Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_bRememberLastSuccessful_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bRememberLastSuccessful_MetaData), NewProp_bRememberLastSuccessful_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_MemoryDuration = { "MemoryDuration", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationSettings, MemoryDuration), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MemoryDuration_MetaData), NewProp_MemoryDuration_MetaData) };
+const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::PropPointers[] = {
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_ChangeTolerance,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_bRememberLastSuccessful,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewProp_MemoryDuration,
 };
-static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::PropPointers) < 2048);
-// ********** End ScriptStruct FFuzzyAIObservationEntry Property Definitions ***********************
-const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::StructParams = {
+static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::PropPointers) < 2048);
+// ********** End ScriptStruct FFuzzyAIObservationSettings Property Definitions ********************
+const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::StructParams = {
 	(UObject* (*)())Z_Construct_UPackage__Script_FuzzyAIRuntime,
 	nullptr,
 	&NewStructOps,
-	"FuzzyAIObservationEntry",
-	Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::PropPointers,
-	UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::PropPointers),
-	sizeof(FFuzzyAIObservationEntry),
-	alignof(FFuzzyAIObservationEntry),
+	"FuzzyAIObservationSettings",
+	Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::PropPointers,
+	UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::PropPointers),
+	sizeof(FFuzzyAIObservationSettings),
+	alignof(FFuzzyAIObservationSettings),
 	RF_Public|RF_Transient|RF_MarkAsNative,
 	EStructFlags(0x00000201),
-	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::Struct_MetaDataParams), Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::Struct_MetaDataParams)
+	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::Struct_MetaDataParams), Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::Struct_MetaDataParams)
 };
-UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationEntry()
+UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationSettings()
 {
-	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.InnerSingleton)
+	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.InnerSingleton)
 	{
-		UECodeGen_Private::ConstructUScriptStruct(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.InnerSingleton, Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::StructParams);
+		UECodeGen_Private::ConstructUScriptStruct(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.InnerSingleton, Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::StructParams);
 	}
-	return CastChecked<UScriptStruct>(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry.InnerSingleton);
+	return CastChecked<UScriptStruct>(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings.InnerSingleton);
 }
-// ********** End ScriptStruct FFuzzyAIObservationEntry ********************************************
+// ********** End ScriptStruct FFuzzyAIObservationSettings *****************************************
 
 // ********** Begin ScriptStruct FFuzzyAIObservationRecord *****************************************
 struct Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics
@@ -669,14 +606,14 @@ struct Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_Fuzz
 		{ EFuzzyAIObservationUpdatePolicy_StaticEnum, TEXT("EFuzzyAIObservationUpdatePolicy"), &Z_Registration_Info_UEnum_EFuzzyAIObservationUpdatePolicy, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 3443719267U) },
 	};
 	static constexpr FStructRegisterCompiledInInfo ScriptStructInfo[] = {
-		{ FFuzzyAIObservationEntry::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationEntry_Statics::NewStructOps, TEXT("FuzzyAIObservationEntry"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationEntry, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationEntry), 3358307648U) },
+		{ FFuzzyAIObservationSettings::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewStructOps, TEXT("FuzzyAIObservationSettings"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationSettings), 812094478U) },
 		{ FFuzzyAIObservationRecord::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewStructOps, TEXT("FuzzyAIObservationRecord"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationRecord, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationRecord), 3864767520U) },
 		{ FFuzzyAIRememberedObservation::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewStructOps, TEXT("FuzzyAIRememberedObservation"),&Z_Registration_Info_UScriptStruct_FFuzzyAIRememberedObservation, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIRememberedObservation), 1723553164U) },
 		{ FFuzzyAIObservedEvent::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservedEvent_Statics::NewStructOps, TEXT("FuzzyAIObservedEvent"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservedEvent, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservedEvent), 207617125U) },
 		{ FFuzzyAITargetLocationKnowledge::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAITargetLocationKnowledge_Statics::NewStructOps, TEXT("FuzzyAITargetLocationKnowledge"),&Z_Registration_Info_UScriptStruct_FFuzzyAITargetLocationKnowledge, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAITargetLocationKnowledge), 4179603342U) },
 	};
 }; // Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics 
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_1112574108{
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_2310674015{
 	TEXT("/Script/FuzzyAIRuntime"),
 	nullptr, 0,
 	Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics::ScriptStructInfo),

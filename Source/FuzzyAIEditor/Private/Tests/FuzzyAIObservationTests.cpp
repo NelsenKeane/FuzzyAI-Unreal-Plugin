@@ -1,11 +1,13 @@
+// Exercises the working observation layer using transient worlds and Blueprint fixtures.
+// Covers inline sampling, typed storage, lifecycle, memory, scheduling and Blueprint authoring.
+
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Misc/PackageName.h"
+#include "UObject/UnrealType.h"
 #include "FuzzyAIComponent.h"
-#include "Observation/ObservationRuntime.h"
 #include "Observation/ObservationMemory.h"
-#include "Observation/ObservationResultLibrary.h"
-#include "Observation/StandardObservations.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
@@ -13,6 +15,7 @@
 #include "UObject/StrongObjectPtr.h"
 #include "Observation/FuzzyObservationStore.h"
 #include "Observation/FuzzyObservation.h"
+#include "Observation/FuzzyObservationManager.h"
 #include "Observation/Sensors/FuzzyStandardObservations.h"
 
 #if WITH_EDITOR
@@ -26,10 +29,9 @@
 #include "EdGraphSchema_K2.h"
 #include "K2Node_Event.h"
 #include "K2Node_CallFunction.h"
-#include "Misc/CommandLine.h"
-#include "Misc/Parse.h"
 #endif
 
+#pragma region Test Fixtures
 namespace FuzzyAIObservationTests
 {
     struct FWorld
@@ -62,11 +64,11 @@ namespace FuzzyAIObservationTests
             return Result;
         }
 
-        UFuzzyAIComponent* Component(AActor* Owner, const TArray<FFuzzyAIObservationEntry>& Entries)
+        UFuzzyAIComponent* Component(AActor* Owner, const TArray<TObjectPtr<UFuzzyObservation>>& Sensors = {})
         {
             UFuzzyAIComponent* Result = NewObject<UFuzzyAIComponent>(Owner);
             Result->bAutoStart = false;
-            Result->Observations = Entries;
+            Result->ObservationInstances = Sensors;
             Owner->AddInstanceComponent(Result);
             Result->RegisterComponent();
             return Result;
@@ -74,57 +76,74 @@ namespace FuzzyAIObservationTests
     };
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationRuntimeTest, "FuzzyAI.Observation.Runtime",
+#pragma endregion
+#pragma region Sampling Tests
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationSamplingTest, "FuzzyAI.Observation.Sampling",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
-bool FFuzzyAIObservationRuntimeTest::RunTest(const FString& Parameters)
+bool FFuzzyAIObservationSamplingTest::RunTest(const FString& Parameters)
 {
     using namespace FuzzyAIObservationTests;
     FWorld Fixture;
     AActor* Observer = Fixture.Actor();
     AActor* Target = Fixture.Actor(FVector(250., 0., 0.));
-    TStrongObjectPtr<UFuzzyAIDistanceObservation> Asset(NewObject<UFuzzyAIDistanceObservation>());
-    TStrongObjectPtr<UFuzzyAIObservationRuntime> Runtime(NewObject<UFuzzyAIObservationRuntime>());
-    FFuzzyAIObservationEntry Entry;
-    Entry.Observation = Asset.Get();
-    Entry.ChangeTolerance = 1.f;
+    UFuzzyAIComponent* Owner = Fixture.Component(Observer);
+    TStrongObjectPtr<UFuzzyDistanceObservation> Sensor(NewObject<UFuzzyDistanceObservation>(Owner));
+    Sensor->ChangeTolerance = 1.f;
+    TStrongObjectPtr<UFuzzyObservationManager> Manager(NewObject<UFuzzyObservationManager>(Owner));
+    TStrongObjectPtr<UFuzzyObservationStore> Store(NewObject<UFuzzyObservationStore>(Owner));
     TArray<FString> Errors;
-    TestTrue(TEXT("Valid configuration accepted"), Runtime->Initialize({Entry}, Errors));
+    TestTrue(TEXT("Valid inline configuration accepted"), Manager->Initialize({Sensor.Get()}, Owner, Errors));
     FFuzzyAIObservationContext Context;
     Context.Observer = Observer;
     Context.Target = Target;
     Context.bTargetVisible = true;
+    Manager->Start(Owner, Store.Get(), Context);
     TArray<FName> Sampled;
-    const FName Key = Asset->ObservationKey;
-    auto Changes = Runtime->Refresh({Key}, Context, 1, 1., Sampled);
-    TestEqual(TEXT("Initial result notified once"), Changes.Num(), 1);
+    int32 Revision = 1;
+    const auto Sample = [&](double Time)
+    {
+        Store->BeginBatch(Time);
+        Manager->Sample(Manager->GetIds(), Store.Get(), Context, Revision, Time);
+        return Store->Commit(Sampled);
+    };
+    const FName Key = Sensor->ObservationKey;
+    TestEqual(TEXT("Initial result notified once"), Sample(1.).Num(), 1);
     FFuzzyAIObservationRecord Record;
-    TestTrue(TEXT("Key exists"), Runtime->TryGetObservation(Key, Record));
+    TestTrue(TEXT("Key exists"), Store->TryGetObservation(Key, Record));
     TestTrue(TEXT("Distance is valid"), Record.Result.bIsValid);
     TestEqual(TEXT("Distance in cm"), Record.Result.FloatValue, 250.f);
-    Changes = Runtime->Refresh({Key}, Context, 1, 2., Sampled);
-    TestEqual(TEXT("Unchanged reading stays quiet"), Changes.Num(), 0);
-    Runtime->TryGetObservation(Key, Record);
-    TestEqual(TEXT("Unchanged successful reading refreshes timestamp"), Record.LastSuccessTime, 2.);
+    TestEqual(TEXT("Unchanged reading stays quiet"), Sample(2.).Num(), 0);
+    Store->TryGetObservation(Key, Record);
+    TestEqual(TEXT("Successful reading refreshes timestamp"), Record.LastSuccessTime, 2.);
     Target->SetActorLocation(FVector(250.6, 0., 0.));
-    TestEqual(TEXT("Sub-tolerance change stays quiet"), Runtime->Refresh({Key}, Context, 1, 3., Sampled).Num(), 0);
+    TestEqual(TEXT("Sub-tolerance change stays quiet"), Sample(3.).Num(), 0);
     Target->SetActorLocation(FVector(251.2, 0., 0.));
-    TestEqual(TEXT("Small changes accumulate against notified baseline"), Runtime->Refresh({Key}, Context, 1, 4., Sampled).Num(), 1);
+    TestEqual(TEXT("Changes accumulate against notified baseline"), Sample(4.).Num(), 1);
     Context.bTargetVisible = false;
-    TestEqual(TEXT("Sight loss notifies invalidity"), Runtime->Refresh({Key}, Context, 1, 5., Sampled).Num(), 1);
-    Runtime->TryGetObservation(Key, Record);
+    TestEqual(TEXT("Sight loss notifies invalidity"), Sample(5.).Num(), 1);
+    Store->TryGetObservation(Key, Record);
     TestFalse(TEXT("Hidden target unavailable"), Record.Result.bIsValid);
-    TestEqual(TEXT("Failed read does not advance success timestamp"), Record.LastSuccessTime, 4.);
+    TestEqual(TEXT("Failure preserves last-success time"), Record.LastSuccessTime, 4.);
     Context.Target = Fixture.Actor(Target->GetActorLocation());
-    TestEqual(TEXT("New target with same value still notifies"), Runtime->Refresh({Key}, Context, 2, 6., Sampled).Num(), 1);
-    Runtime->TryGetObservation(Key, Record);
+    ++Revision;
+    TestEqual(TEXT("New context notifies even with same invalid value"), Sample(6.).Num(), 1);
+    Store->TryGetObservation(Key, Record);
     TestEqual(TEXT("New target has no inherited success time"), Record.LastSuccessTime, -1.);
-    TestFalse(TEXT("Duplicate keys reject entire configuration"), Runtime->Initialize({Entry, Entry}, Errors));
-    TestTrue(TEXT("Duplicate error returned"), !Errors.IsEmpty());
-    TestTrue(TEXT("Rejected configuration has no runnable keys"), Runtime->GetKeys().IsEmpty());
+    TestFalse(TEXT("Duplicate sensor IDs reject configuration"), Manager->Initialize({Sensor.Get(), Sensor.Get()}, Owner, Errors));
+    TestFalse(TEXT("Duplicate error returned"), Errors.IsEmpty());
+    TestTrue(TEXT("Rejected configuration has no runnable sensors"), Manager->GetIds().IsEmpty());
+    Sensor->Interval = -1.f;
+    TestFalse(TEXT("Invalid timing rejects configuration"), Manager->Initialize({Sensor.Get()}, Owner, Errors));
+    Sensor->Interval = 0.2f;
+    TestTrue(TEXT("Corrected settings can start again"), Manager->Initialize({Sensor.Get()}, Owner, Errors));
+    TestTrue(TEXT("Successful retry clears stale errors"), Errors.IsEmpty());
+    Manager->Shutdown();
     return true;
 }
 
+#pragma endregion
+#pragma region Memory Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationMemoryTest, "FuzzyAI.Observation.Memory",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -142,7 +161,7 @@ bool FFuzzyAIObservationMemoryTest::RunTest(const FString& Parameters)
     Record.Observer = Observer;
     Record.Target = TargetA;
     Record.bTargetDependent = true;
-    Record.Result = UFuzzyAIObservationResultLibrary::MakeVectorResult(FVector::ZeroVector);
+    Record.Result = FFuzzyAIObservationResult::MakeVector(FVector::ZeroVector);
     Record.LastSuccessTime = 1.;
     TArray<FName> Changed;
     Memory->Remember(Record, 3.f, 0.f, Changed);
@@ -158,7 +177,7 @@ bool FFuzzyAIObservationMemoryTest::RunTest(const FString& Parameters)
     Changed.Reset();
     Memory->Prune(4., Changed);
     TestEqual(TEXT("Expiry reports changed key"), Changed.Num(), 1);
-    Record.Result = UFuzzyAIObservationResultLibrary::MakeFloatResult(1.f);
+    Record.Result = FFuzzyAIObservationResult::MakeFloat(1.f);
     Record.LastSuccessTime = 5.;
     Memory->Remember(Record, 0.f, 0.f, Changed);
     Record.Target = TargetB;
@@ -183,41 +202,54 @@ bool FFuzzyAIObservationMemoryTest::RunTest(const FString& Parameters)
     return true;
 }
 
+#pragma endregion
+#pragma region Update Policy Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationPoliciesTest, "FuzzyAI.Observation.UpdatePolicies",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FFuzzyAIObservationPoliciesTest::RunTest(const FString& Parameters)
 {
-    TStrongObjectPtr<UFuzzyAIObservationRuntime> Runtime(NewObject<UFuzzyAIObservationRuntime>());
-    TArray<FFuzzyAIObservationEntry> Entries;
-    TArray<TStrongObjectPtr<UFuzzyAIDistanceObservation>> Assets;
+    using namespace FuzzyAIObservationTests;
+    FWorld Fixture;
+    UFuzzyAIComponent* Owner = Fixture.Component(Fixture.Actor());
+    TStrongObjectPtr<UFuzzyObservationManager> Manager(NewObject<UFuzzyObservationManager>(Owner));
+    TStrongObjectPtr<UFuzzyObservationStore> Store(NewObject<UFuzzyObservationStore>(Owner));
+    TArray<TObjectPtr<UFuzzyObservation>> Sensors;
     const EFuzzyAIObservationUpdatePolicy Policies[] = { EFuzzyAIObservationUpdatePolicy::Interval,
         EFuzzyAIObservationUpdatePolicy::SourceEvent, EFuzzyAIObservationUpdatePolicy::EveryFrame, EFuzzyAIObservationUpdatePolicy::Manual };
     for (int32 Index = 0; Index < 4; ++Index)
     {
-        Assets.Emplace(NewObject<UFuzzyAIDistanceObservation>());
-        Assets.Last()->ObservationKey = FName(*FString::Printf(TEXT("Policy%d"), Index));
-        FFuzzyAIObservationEntry Entry;
-        Entry.Observation = Assets.Last().Get();
-        Entry.UpdatePolicy = Policies[Index];
-        Entry.Interval = 0.2f;
-        Entries.Add(Entry);
+        UFuzzyDistanceObservation* Sensor = NewObject<UFuzzyDistanceObservation>(Owner);
+        Sensor->ObservationKey = FName(*FString::Printf(TEXT("Policy%d"), Index));
+        Sensor->UpdatePolicy = Policies[Index];
+        Sensor->Interval = 0.2f;
+        Sensors.Add(Sensor);
     }
     TArray<FString> Errors;
-    TestTrue(TEXT("All policies initialize"), Runtime->Initialize(Entries, Errors));
-    TestTrue(TEXT("Every-frame entry enables frame scheduling"), Runtime->NeedsEveryFrame());
+    TestTrue(TEXT("All inline policies initialize"), Manager->Initialize(Sensors, Owner, Errors));
+    TestTrue(TEXT("Frame sensor enables frame scheduling"), Manager->NeedsEveryFrame());
+    FFuzzyAIObservationContext Context;
+    Context.Observer = Owner->GetOwner();
+    Context.Target = Fixture.Actor(FVector(100., 0., 0.));
+    Context.bTargetVisible = true;
+    Manager->Start(Owner, Store.Get(), Context);
+    Store->BeginBatch(0.);
+    Manager->Sample(Manager->GetIds(), Store.Get(), Context, 0, 0.);
     TArray<FName> Sampled;
-    Runtime->Refresh(Runtime->GetKeys(), FFuzzyAIObservationContext(), 0, 0., Sampled);
-    TestEqual(TEXT("Initial sample includes event/manual entries"), Sampled.Num(), 4);
-    TestEqual(TEXT("Intervals not sampled early"), Runtime->GetDueKeys(0.1, false).Num(), 0);
-    TestEqual(TEXT("Only interval entry scheduled by timer"), Runtime->GetDueKeys(0.21, false).Num(), 1);
-    TestEqual(TEXT("Only frame entry scheduled by tick"), Runtime->GetDueKeys(0.21, true).Num(), 1);
-    Entries.RemoveAt(2);
-    Runtime->Initialize(Entries, Errors);
-    TestFalse(TEXT("Tick unnecessary without every-frame entries"), Runtime->NeedsEveryFrame());
+    Store->Commit(Sampled);
+    TestEqual(TEXT("Initial sample includes event/manual sensors"), Sampled.Num(), 4);
+    TestEqual(TEXT("Intervals not sampled early"), Manager->GetDueIds(0.1, false).Num(), 0);
+    TestEqual(TEXT("Only interval sensor scheduled by timer"), Manager->GetDueIds(0.21, false).Num(), 1);
+    TestEqual(TEXT("Only frame sensor scheduled by tick"), Manager->GetDueIds(0.21, true).Num(), 1);
+    Sensors.RemoveAt(2);
+    TestTrue(TEXT("Configuration without frame sensor initializes"), Manager->Initialize(Sensors, Owner, Errors));
+    TestFalse(TEXT("Tick unnecessary without frame sensors"), Manager->NeedsEveryFrame());
+    Manager->Shutdown();
     return true;
 }
 
+#pragma endregion
+#pragma region Component Integration Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationComponentTest, "FuzzyAI.Observation.ComponentIntegration",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -229,21 +261,17 @@ bool FFuzzyAIObservationComponentTest::RunTest(const FString& Parameters)
     AActor* EnemyB = Fixture.Actor();
     AActor* TargetA = Fixture.Actor(FVector(100., 0., 0.));
     AActor* TargetB = Fixture.Actor(FVector(200., 0., 0.));
-    TStrongObjectPtr<UFuzzyAIVisibleTargetLocationObservation> Location(NewObject<UFuzzyAIVisibleTargetLocationObservation>());
-    FFuzzyAIObservationEntry Entry;
-    Entry.Observation = Location.Get();
-    Entry.UpdatePolicy = EFuzzyAIObservationUpdatePolicy::SourceEvent;
-    Entry.bRememberLastSuccessful = true;
-    Entry.bRequiresVisibleTarget = true;
-    UFuzzyAIComponent* A = Fixture.Component(EnemyA, {Entry});
-    UFuzzyAIComponent* B = Fixture.Component(EnemyB, {Entry});
+    TStrongObjectPtr<UFuzzyTargetLocationObservation> Location(NewObject<UFuzzyTargetLocationObservation>());
+    Location->UpdatePolicy = EFuzzyAIObservationUpdatePolicy::SourceEvent;
+    UFuzzyAIComponent* A = Fixture.Component(EnemyA, {Location.Get()});
+    UFuzzyAIComponent* B = Fixture.Component(EnemyB, {Location.Get()});
     TestTrue(TEXT("First enemy starts"), A->StartAI());
     TestTrue(TEXT("Second enemy starts"), B->StartAI());
     TestFalse(TEXT("Event-only component tick disabled"), A->IsComponentTickEnabled());
     A->UpdateTargetSighting(TargetA, true);
     B->UpdateTargetSighting(TargetB, true);
     TestEqual(TEXT("First enemy owns independent result"), A->GetTargetLocationKnowledge().ActiveLocation, FVector(100., 0., 0.));
-    TestEqual(TEXT("Second enemy shares asset but not state"), B->GetTargetLocationKnowledge().ActiveLocation, FVector(200., 0., 0.));
+    TestEqual(TEXT("Second enemy shares template but not state"), B->GetTargetLocationKnowledge().ActiveLocation, FVector(200., 0., 0.));
     TargetA->SetActorLocation(FVector(150., 0., 0.));
     TestEqual(TEXT("Source event cache unchanged before notification"), A->GetTargetLocationKnowledge().ActiveLocation, FVector(100., 0., 0.));
     TestTrue(TEXT("Source notification accepted"), A->NotifyObservationSourceChanged(Location->ObservationKey));
@@ -271,6 +299,8 @@ bool FFuzzyAIObservationComponentTest::RunTest(const FString& Parameters)
     return true;
 }
 
+#pragma endregion
+#pragma region Typed Store Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationStoreTest, "FuzzyAI.Observation.TypedStore",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -278,11 +308,11 @@ bool FFuzzyAIObservationStoreTest::RunTest(const FString& Parameters)
 {
     FuzzyAIObservationTests::FWorld Fixture;
     TStrongObjectPtr<UFuzzyObservationStore> Store(NewObject<UFuzzyObservationStore>());
-    TStrongObjectPtr<UFuzzyAIDistanceObservation> Writer(NewObject<UFuzzyAIDistanceObservation>());
-    TStrongObjectPtr<UFuzzyAIDistanceObservation> OtherWriter(NewObject<UFuzzyAIDistanceObservation>());
+    TStrongObjectPtr<UFuzzyDistanceObservation> Writer(NewObject<UFuzzyDistanceObservation>());
+    TStrongObjectPtr<UFuzzyDistanceObservation> OtherWriter(NewObject<UFuzzyDistanceObservation>());
     FFuzzyAIObservationContext Context;
     Context.Observer = Fixture.Actor();
-    FFuzzyAIObservationEntry Settings;
+    FFuzzyAIObservationSettings Settings;
     TestFalse(TEXT("Consumers cannot write outside Sample"), Store->SetFloat(TEXT("Test.Float"), 1.f));
     Store->BeginBatch(1.);
     Store->BeginSample(Writer.Get(), NAME_None, EFuzzyAIObservationValueType::Float, Settings, false, Context, 0);
@@ -320,6 +350,8 @@ bool FFuzzyAIObservationStoreTest::RunTest(const FString& Parameters)
     return true;
 }
 
+#pragma endregion
+#pragma region Instanced Sensor Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationInstancesTest, "FuzzyAI.Observation.InstancedSensors",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -378,7 +410,9 @@ bool FFuzzyAIObservationInstancesTest::RunTest(const FString& Parameters)
     return true;
 }
 
+#pragma endregion
 #if WITH_EDITOR
+#pragma region Blueprint Component Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationBlueprintTest, "FuzzyAI.Observation.BlueprintComponent",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -397,11 +431,9 @@ bool FFuzzyAIObservationBlueprintTest::RunTest(const FString& Parameters)
     Blueprint->SimpleConstructionScript->AddNode(Node);
     UFuzzyAIComponent* Template = CastChecked<UFuzzyAIComponent>(Node->ComponentTemplate);
     Template->bAutoStart = false;
-    UFuzzyAIDistanceObservation* Distance = NewObject<UFuzzyAIDistanceObservation>(Blueprint.Get());
-    FFuzzyAIObservationEntry Entry;
-    Entry.Observation = Distance;
-    Entry.UpdatePolicy = EFuzzyAIObservationUpdatePolicy::Manual;
-    Template->Observations.Add(Entry);
+    UFuzzyDistanceObservation* Distance = NewObject<UFuzzyDistanceObservation>(Template);
+    Distance->UpdatePolicy = EFuzzyAIObservationUpdatePolicy::Manual;
+    Template->ObservationInstances.Add(Distance);
     FKismetEditorUtilities::CompileBlueprint(Blueprint.Get());
     TestTrue(TEXT("Enemy Blueprint compiles with single FuzzyAI component"), Blueprint->Status != BS_Error);
     AActor* Enemy = Fixture.World->SpawnActor<AActor>(Blueprint->GeneratedClass);
@@ -414,7 +446,7 @@ bool FFuzzyAIObservationBlueprintTest::RunTest(const FString& Parameters)
     {
         return false;
     }
-    TestEqual(TEXT("Observation entry survives Blueprint compilation"), Component->Observations.Num(), 1);
+    TestEqual(TEXT("Inline sensor survives Blueprint compilation"), Component->ObservationInstances.Num(), 1);
     TestTrue(TEXT("Blueprint component starts"), Component->StartAI());
     Component->UpdateTargetSighting(Fixture.Actor(FVector(250., 0., 0.)), true);
     FFuzzyAIObservationRecord Result;
@@ -427,6 +459,8 @@ bool FFuzzyAIObservationBlueprintTest::RunTest(const FString& Parameters)
     Component->StopAI();
     return true;
 }
+#pragma endregion
+#pragma region Blueprint Sensor Tests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIObservationBlueprintSensorTest, "FuzzyAI.Observation.BlueprintSensorSample",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
@@ -514,57 +548,21 @@ bool FFuzzyAIObservationBlueprintSensorTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIExistingObservationAssetTest, "FuzzyAI.Observation.ExistingAssetCompatibility",
+#pragma endregion
+#pragma region Inline API Tests
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIInlineOnlyAPITest, "FuzzyAI.Observation.InlineOnlyAPI",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
-bool FFuzzyAIExistingObservationAssetTest::RunTest(const FString& Parameters)
+bool FFuzzyAIInlineOnlyAPITest::RunTest(const FString& Parameters)
 {
-    const auto VerifyRedirect = [this](UObject* Expected)
-    {
-        const FString OldPath = TEXT("/Script/FuzzyAIObservation.") + Expected->GetName();
-        UObject* Resolved = StaticLoadObject(Expected->GetClass(), nullptr, *OldPath);
-        TestTrue(FString::Printf(TEXT("Legacy path resolves: %s"), *OldPath), Resolved == Expected);
-        TestTrue(TEXT("Reflected type belongs to runtime package"),
-            Expected->GetOutermost()->GetName() == TEXT("/Script/FuzzyAIRuntime"));
-    };
-    VerifyRedirect(UFuzzyAIObservationAsset::StaticClass());
-    VerifyRedirect(UFuzzyAIObservationRuntime::StaticClass());
-    VerifyRedirect(UFuzzyAIObservationMemory::StaticClass());
-    VerifyRedirect(UFuzzyAIObservationResultLibrary::StaticClass());
-    VerifyRedirect(UFuzzyAIDistanceObservation::StaticClass());
-    VerifyRedirect(UFuzzyAIVisibleTargetLocationObservation::StaticClass());
-    VerifyRedirect(FFuzzyAIObservationContext::StaticStruct());
-    VerifyRedirect(FFuzzyAIObservationResult::StaticStruct());
-    VerifyRedirect(FFuzzyAIObservationEntry::StaticStruct());
-    VerifyRedirect(FFuzzyAIObservationRecord::StaticStruct());
-    VerifyRedirect(FFuzzyAIRememberedObservation::StaticStruct());
-    VerifyRedirect(FFuzzyAIObservedEvent::StaticStruct());
-    VerifyRedirect(FFuzzyAITargetLocationKnowledge::StaticStruct());
-    VerifyRedirect(StaticEnum<EFuzzyAIObservationValueType>());
-    VerifyRedirect(StaticEnum<EFuzzyAIObservationSubject>());
-    VerifyRedirect(StaticEnum<EFuzzyAIObservationUpdatePolicy>());
-    FString AssetPath;
-    if (FParse::Value(FCommandLine::Get(), TEXT("FuzzyAIValidationAsset="), AssetPath))
-    {
-        UObject* Asset = LoadObject<UObject>(nullptr, *AssetPath);
-        if (!TestNotNull(TEXT("Existing authored observation loads"), Asset))
-        {
-            return false;
-        }
-        if (UBlueprint* Blueprint = Cast<UBlueprint>(Asset))
-        {
-            FKismetEditorUtilities::CompileBlueprint(Blueprint);
-            TestTrue(TEXT("Existing observation Blueprint compiles"), Blueprint->Status != BS_Error);
-            TestTrue(TEXT("Existing observation keeps its base class"), Blueprint->GeneratedClass &&
-                Blueprint->GeneratedClass->IsChildOf(UFuzzyAIObservationAsset::StaticClass()));
-        }
-        else
-        {
-            TestTrue(TEXT("Existing observation instance remains compatible"), Asset->IsA<UFuzzyAIObservationAsset>());
-        }
-    }
+    TestNull(TEXT("Asset-based component array has been removed"), FindFProperty<FProperty>(UFuzzyAIComponent::StaticClass(), TEXT("Observations")));
+    TestNotNull(TEXT("Inline sensor array is the supported authoring path"), FindFProperty<FProperty>(UFuzzyAIComponent::StaticClass(), TEXT("ObservationInstances")));
+    TestNull(TEXT("Asset reader class is not registered"), FindObject<UClass>(nullptr, TEXT("/Script/FuzzyAIRuntime.FuzzyAIObservationAsset")));
+    TestNull(TEXT("Asset runtime class is not registered"), FindObject<UClass>(nullptr, TEXT("/Script/FuzzyAIRuntime.FuzzyAIObservationRuntime")));
+    TestFalse(TEXT("Retired health test package is absent"), FPackageName::DoesPackageExist(TEXT("/Game/CombatSystem2/Enemies/EnemyAI/Observations/OBS_SelfHealth")));
     return true;
 }
+#pragma endregion
 #endif
 
 #endif

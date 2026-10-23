@@ -1,26 +1,28 @@
+// Manages a runtime sensor's component/store references, context and lifecycle callbacks.
+// Forwards refresh requests and individual observed events to the owning FuzzyAIComponent.
+
 #include "Observation/FuzzyObservation.h"
 #include "Observation/FuzzyObservationStore.h"
 #include "FuzzyAIComponent.h"
 #include "GameFramework/Actor.h"
 
+#pragma region Default Blueprint Hooks
 void UFuzzyObservation::Sample_Implementation(AActor* Observer, AActor* Target, UFuzzyObservationStore* Store) {}
 void UFuzzyObservation::OnInitialize_Implementation() {}
 void UFuzzyObservation::OnShutdown_Implementation() {}
 void UFuzzyObservation::OnContextChanged_Implementation(const FFuzzyAIObservationContext& Previous, const FFuzzyAIObservationContext& Current) {}
 
+#pragma endregion
+#pragma region Sensor Identity and Settings
 FName UFuzzyObservation::GetId() const
 {
     return !ObservationId.IsNone() ? ObservationId : (!ObservationKey.IsNone() ? ObservationKey : GetFName());
 }
 
-FFuzzyAIObservationEntry UFuzzyObservation::GetSettings() const
+FFuzzyAIObservationSettings UFuzzyObservation::GetSettings() const
 {
-    FFuzzyAIObservationEntry Settings;
-    Settings.UpdatePolicy = UpdatePolicy;
-    Settings.Interval = Interval;
+    FFuzzyAIObservationSettings Settings;
     Settings.ChangeTolerance = ChangeTolerance;
-    Settings.bRequiresVisibleTarget = bRequiresVisibleTarget;
-    Settings.bUsesTargetContext = bUsesTargetContext;
     Settings.bRememberLastSuccessful = bRememberLastSuccessful;
     Settings.MemoryDuration = MemoryDuration;
     return Settings;
@@ -31,6 +33,8 @@ bool UFuzzyObservation::IsTargetDependent() const
     return Subject == EFuzzyAIObservationSubject::Target || bUsesTargetContext || bRequiresVisibleTarget;
 }
 
+#pragma endregion
+#pragma region World and Actor Context
 UWorld* UFuzzyObservation::GetWorld() const
 {
     if (HasAnyFlags(RF_ClassDefaultObject))
@@ -54,6 +58,8 @@ FFuzzyAIObservationContext UFuzzyObservation::GetObservationContext() const
     return Context;
 }
 
+#pragma endregion
+#pragma region Sensor Lifecycle
 void UFuzzyObservation::Start(UFuzzyAIComponent* Component, UFuzzyObservationStore* Store, const FFuzzyAIObservationContext& Context)
 {
     Coordinator = Component;
@@ -104,6 +110,8 @@ void UFuzzyObservation::Shutdown()
     bTargetVisible = false;
 }
 
+#pragma endregion
+#pragma region Component Requests
 bool UFuzzyObservation::RequestRefresh()
 {
     return bInitialized && Coordinator.IsValid() && Coordinator->RequestObservationInstanceRefresh(this);
@@ -113,3 +121,4 @@ bool UFuzzyObservation::RecordObservedEvent(const FFuzzyAIObservedEvent& Event)
 {
     return bInitialized && Coordinator.IsValid() && Coordinator->RecordObservedEvent(Event);
 }
+#pragma endregion

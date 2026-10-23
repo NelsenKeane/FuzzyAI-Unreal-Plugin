@@ -1,8 +1,10 @@
+// Stages sensor outputs, validates types/numbers, detects competing writers and commits observation batches.
+// Tracks omitted outputs, change tolerances and timestamps while providing typed getters for committed facts.
+
 #include "Observation/FuzzyObservationStore.h"
-#include "Observation/ObservationResultLibrary.h"
-#include "Observation/ObservationRuntime.h"
 #include "GameFramework/Actor.h"
 
+#pragma region Reset and Sampling Transactions
 void UFuzzyObservationStore::Reset()
 {
     Records.Reset();
@@ -29,7 +31,7 @@ void UFuzzyObservationStore::BeginBatch(double Time)
 }
 
 void UFuzzyObservationStore::BeginSample(UObject* Writer, FName PrimaryKey, EFuzzyAIObservationValueType PrimaryType,
-    const FFuzzyAIObservationEntry& Settings, bool bTargetDependent,
+    const FFuzzyAIObservationSettings& Settings, bool bTargetDependent,
     const FFuzzyAIObservationContext& Context, int32 ContextRevision)
 {
     check(bBatchOpen && !ActiveWriter.IsValid());
@@ -86,6 +88,8 @@ void UFuzzyObservationStore::InvalidateCurrentSample(const FString& Reason)
     }
 }
 
+#pragma endregion
+#pragma region Write Validation and Invalidation
 bool UFuzzyObservationStore::SetResult(FName Key, const FFuzzyAIObservationResult& Value)
 {
     if (!bBatchOpen || !ActiveWriter.IsValid() || Key.IsNone())
@@ -150,6 +154,8 @@ bool UFuzzyObservationStore::Invalidate(FName Key, const FString& Reason)
     return SetResult(Key, Value);
 }
 
+#pragma endregion
+#pragma region Commit and Change Detection
 TArray<FFuzzyAIObservationChange> UFuzzyObservationStore::Commit(TArray<FName>& OutSampledKeys)
 {
     check(bBatchOpen && !ActiveWriter.IsValid());
@@ -164,10 +170,10 @@ TArray<FFuzzyAIObservationChange> UFuzzyObservationStore::Commit(TArray<FName>& 
         Current.LastSuccessTime = Current.Result.bIsValid ? BatchTime : (bSameContext ? Previous->LastSuccessTime : -1.);
         Current.LastChangeTime = Previous ? Previous->LastChangeTime : BatchTime;
         const FFuzzyAIObservationRecord* Notified = LastNotified.Find(Key);
-        const FFuzzyAIObservationEntry* Settings = SettingsByKey.Find(Key);
+        const FFuzzyAIObservationSettings* Settings = SettingsByKey.Find(Key);
         const float Tolerance = Settings ? Settings->ChangeTolerance : 0.f;
         if (!Notified || Notified->Observer != Current.Observer || Notified->Target != Current.Target ||
-            Notified->ContextRevision != Current.ContextRevision || !UFuzzyAIObservationRuntime::Equivalent(Notified->Result, Current.Result, Tolerance))
+            Notified->ContextRevision != Current.ContextRevision || !FFuzzyAIObservationResult::Equivalent(Notified->Result, Current.Result, Tolerance))
         {
             FFuzzyAIObservationChange Change;
             Change.bHadPrevious = Previous != nullptr;
@@ -187,7 +193,9 @@ TArray<FFuzzyAIObservationChange> UFuzzyObservationStore::Commit(TArray<FName>& 
     return Changes;
 }
 
-const FFuzzyAIObservationEntry* UFuzzyObservationStore::FindSettings(FName Key) const
+#pragma endregion
+#pragma region Metadata and Snapshot Reads
+const FFuzzyAIObservationSettings* UFuzzyObservationStore::FindSettings(FName Key) const
 {
     return SettingsByKey.Find(Key);
 }
@@ -222,13 +230,17 @@ TArray<FFuzzyAIObservationRecord> UFuzzyObservationStore::GetSnapshot() const
     return Snapshot;
 }
 
-bool UFuzzyObservationStore::SetFloat(FName Key, float Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeFloatResult(Value)); }
-bool UFuzzyObservationStore::SetInteger(FName Key, int32 Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeIntegerResult(Value)); }
-bool UFuzzyObservationStore::SetBoolean(FName Key, bool Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeBooleanResult(Value)); }
-bool UFuzzyObservationStore::SetVector(FName Key, FVector Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeVectorResult(Value)); }
-bool UFuzzyObservationStore::SetObject(FName Key, UObject* Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeObjectResult(Value)); }
-bool UFuzzyObservationStore::SetGameplayTag(FName Key, FGameplayTag Value) { return SetResult(Key, UFuzzyAIObservationResultLibrary::MakeGameplayTagResult(Value)); }
+#pragma endregion
+#pragma region Typed Writes
+bool UFuzzyObservationStore::SetFloat(FName Key, float Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeFloat(Value)); }
+bool UFuzzyObservationStore::SetInteger(FName Key, int32 Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeInteger(Value)); }
+bool UFuzzyObservationStore::SetBoolean(FName Key, bool Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeBoolean(Value)); }
+bool UFuzzyObservationStore::SetVector(FName Key, FVector Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeVector(Value)); }
+bool UFuzzyObservationStore::SetObject(FName Key, UObject* Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeObject(Value)); }
+bool UFuzzyObservationStore::SetGameplayTag(FName Key, FGameplayTag Value) { return SetResult(Key, FFuzzyAIObservationResult::MakeGameplayTag(Value)); }
 
+#pragma endregion
+#pragma region Typed Reads
 bool UFuzzyObservationStore::GetFloat(FName Key, float& OutValue) const
 {
     const FFuzzyAIObservationRecord* R = Records.Find(Key);
@@ -276,3 +288,4 @@ bool UFuzzyObservationStore::GetGameplayTag(FName Key, FGameplayTag& OutValue) c
     OutValue = bValid ? R->Result.GameplayTagValue : FGameplayTag();
     return bValid;
 }
+#pragma endregion

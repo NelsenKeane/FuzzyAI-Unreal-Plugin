@@ -3,10 +3,11 @@
 	{
 		"Module.FuzzyAIEditor.cpp.obj": [
 			"PerModuleInline.gen.cpp.obj",
-			"FuzzyAIDebugger.cpp.obj",
+			"FuzzyAIDebugModel.cpp.obj",
+			"SFuzzyAIDebugger.cpp.obj",
 			"FuzzyAIEditor.cpp.obj",
-			"FuzzyAIObservationTests.cpp.obj",
-			"FuzzyAIPrototypeTests.cpp.obj"
+			"FuzzyAIDebuggerTests.cpp.obj",
+			"FuzzyAIObservationTests.cpp.obj"
 		]
 	}
 }

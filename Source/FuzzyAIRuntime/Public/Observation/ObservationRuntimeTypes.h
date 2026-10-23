@@ -1,9 +1,13 @@
+// Defines sensor result settings, update policies, timestamped records, remembered facts and observed events.
+// Also provides the combined active/last-seen location view exposed by the component.
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Observation/ObservationAsset.h"
+#include "Observation/ObservationTypes.h"
 #include "ObservationRuntimeTypes.generated.h"
 
+#pragma region Update Policy
 UENUM(BlueprintType)
 enum class EFuzzyAIObservationUpdatePolicy : uint8
 {
@@ -13,30 +17,15 @@ enum class EFuzzyAIObservationUpdatePolicy : uint8
     Manual
 };
 
+#pragma endregion
+#pragma region Result and Memory Settings
 USTRUCT(BlueprintType)
-struct FUZZYAIRUNTIME_API FFuzzyAIObservationEntry
+struct FUZZYAIRUNTIME_API FFuzzyAIObservationSettings
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    TObjectPtr<UFuzzyAIObservationAsset> Observation = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    EFuzzyAIObservationUpdatePolicy UpdatePolicy = EFuzzyAIObservationUpdatePolicy::Interval;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (ClampMin = "0.01", EditCondition = "UpdatePolicy == EFuzzyAIObservationUpdatePolicy::Interval"))
-    float Interval = 0.2f;
-
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (ClampMin = "0"))
     float ChangeTolerance = 0.01f;
-
-    /** Gates the read before calling Blueprint, so an unseen target cannot leak live data. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    bool bRequiresVisibleTarget = false;
-
-    /** Enable for Custom readers that use Target or Subjects. Target subjects are automatic. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    bool bUsesTargetContext = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Memory")
     bool bRememberLastSuccessful = false;
@@ -46,6 +35,8 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationEntry
     float MemoryDuration = 10.f;
 };
 
+#pragma endregion
+#pragma region Current Observation Record
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAIObservationRecord
 {
@@ -79,6 +70,8 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationRecord
     int32 ContextRevision = 0;
 };
 
+#pragma endregion
+#pragma region Remembered Observation
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAIRememberedObservation
 {
@@ -92,6 +85,8 @@ struct FUZZYAIRUNTIME_API FFuzzyAIRememberedObservation
     double ExpiresAt = -1.;
 };
 
+#pragma endregion
+#pragma region Observed Event
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAIObservedEvent
 {
@@ -114,6 +109,8 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservedEvent
     double Time = -1.;
 };
 
+#pragma endregion
+#pragma region Target Location Knowledge
 USTRUCT(BlueprintType)
 struct FUZZYAIRUNTIME_API FFuzzyAITargetLocationKnowledge
 {
@@ -141,9 +138,12 @@ struct FUZZYAIRUNTIME_API FFuzzyAITargetLocationKnowledge
     double LastSeenAge = -1.;
 };
 
+#pragma endregion
+#pragma region Internal Change Record
 struct FUZZYAIRUNTIME_API FFuzzyAIObservationChange
 {
     FFuzzyAIObservationRecord Previous;
     FFuzzyAIObservationRecord Current;
     bool bHadPrevious = false;
 };
+#pragma endregion

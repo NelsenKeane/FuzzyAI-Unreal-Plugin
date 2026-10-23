@@ -21,7 +21,7 @@ struct FFuzzyAIObservationResult;
 struct FGameplayTag;
 
 // ********** Begin Class UFuzzyObservationStore ***************************************************
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execGetWriteErrors); \
 	DECLARE_FUNCTION(execGetSnapshot); \
 	DECLARE_FUNCTION(execTryGetObservation); \
@@ -44,7 +44,7 @@ struct FGameplayTag;
 struct Z_Construct_UClass_UFuzzyObservationStore_Statics;
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyObservationStore_NoRegister();
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_INCLASS_NO_PURE_DECLS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUFuzzyObservationStore(); \
 	friend struct ::Z_Construct_UClass_UFuzzyObservationStore_Statics; \
@@ -55,7 +55,7 @@ public: \
 	DECLARE_SERIALIZER(UFuzzyObservationStore)
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_ENHANCED_CONSTRUCTORS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UFuzzyObservationStore(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 	/** Deleted move- and copy-constructors, should never be used */ \
@@ -67,13 +67,13 @@ public: \
 	NO_API virtual ~UFuzzyObservationStore();
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_8_PROLOG
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_GENERATED_BODY \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_PROLOG
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_INCLASS_NO_PURE_DECLS \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_11_ENHANCED_CONSTRUCTORS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_INCLASS_NO_PURE_DECLS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservationStore_h_14_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 

@@ -1,0 +1,39 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyaidebugger.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\unreal projects\\gameanimationsample\\intermediate\\build\\win64\\x64\\gameanimationsampleeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_4.h.pch",
+        "Includes": [
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaieditor\\definitions.fuzzyaieditor.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyaidebugger.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\fuzzyaidebugmodel.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\core\\fuzzyaicomponent.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\observationruntimetypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\observationtypes.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationtypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationruntimetypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaicomponent.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\engine\\classes\\engine\\selection.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\editor\\unrealed\\public\\selection.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementframework\\public\\elements\\framework\\typedelementlist.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementframework\\public\\elements\\framework\\typedelementcounter.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementframework\\uht\\typedelementcounter.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementruntime\\public\\elements\\framework\\typedelementselectionset.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementruntime\\public\\elements\\framework\\typedelementinterfacecustomization.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementruntime\\public\\elements\\framework\\typedelementlistobjectutil.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementruntime\\public\\elements\\interfaces\\typedelementselectioninterface.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\typedelementframework\\public\\elements\\framework\\typedelementlistproxy.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementframework\\uht\\typedelementlistproxy.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementruntime\\uht\\typedelementselectioninterface.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementruntime\\uht\\typedelementselectionset.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\unrealed\\uht\\selection.generated.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\slate\\public\\widgets\\input\\ssearchbox.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

@@ -1,3 +1,6 @@
+// Declares the inline sensor base, its sampling settings and its initialization, context-change and shutdown hooks.
+// Each enemy receives its own runtime sensor instances, which publish keyed values through the store.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,6 +18,7 @@ class FUZZYAIRUNTIME_API UFuzzyObservation : public UObject
     GENERATED_BODY()
 
 public:
+    #pragma region Sensor Configuration
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     bool bEnabled = true;
 
@@ -47,12 +51,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     bool bUsesTargetContext = false;
 
+    #pragma endregion
+    #pragma region Memory Configuration
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Memory")
     bool bRememberLastSuccessful = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Memory", meta = (ClampMin = "0"))
     float MemoryDuration = 10.f;
 
+    #pragma endregion
+    #pragma region Sampling and Component Requests
     UFUNCTION(BlueprintNativeEvent, Category = "Fuzzy AI|Observation")
     void Sample(AActor* Observer, AActor* Target, UFuzzyObservationStore* Store);
     virtual void Sample_Implementation(AActor* Observer, AActor* Target, UFuzzyObservationStore* Store);
@@ -71,11 +79,13 @@ public:
     UFuzzyObservationStore* GetObservationStore() const { return RuntimeStore; }
 
     FName GetId() const;
-    FFuzzyAIObservationEntry GetSettings() const;
+    FFuzzyAIObservationSettings GetSettings() const;
     bool IsTargetDependent() const;
     virtual UWorld* GetWorld() const override;
 
+    #pragma endregion
 protected:
+    #pragma region Sensor Lifecycle Hooks
     /** Bind game-specific delegates here. No store writes are accepted until Sample. */
     UFUNCTION(BlueprintNativeEvent, Category = "Fuzzy AI|Observation")
     void OnInitialize();
@@ -91,12 +101,16 @@ protected:
     void OnContextChanged(const FFuzzyAIObservationContext& Previous, const FFuzzyAIObservationContext& Current);
     virtual void OnContextChanged_Implementation(const FFuzzyAIObservationContext& Previous, const FFuzzyAIObservationContext& Current);
 
+    #pragma endregion
 private:
+    #pragma region Manager Coordination
     friend class UFuzzyObservationManager;
     void Start(UFuzzyAIComponent* Component, UFuzzyObservationStore* Store, const FFuzzyAIObservationContext& Context);
     void UpdateContext(const FFuzzyAIObservationContext& Context);
     void Shutdown();
 
+    #pragma endregion
+    #pragma region Per Enemy Runtime State
     UPROPERTY(Transient)
     TWeakObjectPtr<UFuzzyAIComponent> Coordinator;
 
@@ -114,4 +128,5 @@ private:
 
     bool bTargetVisible = false;
     bool bInitialized = false;
+    #pragma endregion
 };

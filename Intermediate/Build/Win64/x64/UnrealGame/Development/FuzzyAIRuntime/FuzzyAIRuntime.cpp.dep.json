@@ -5,9 +5,7 @@
         "ProvidedModule": "",
         "PCH": "d:\\unreal projects\\gameanimationsample\\intermediate\\build\\win64\\x64\\gameanimationsample\\development\\engine\\sharedpch.engine.project.valapi.valexpapi.cpp20.inclorderunreal5_4.h.pch",
         "Includes": [
-            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealgame\\development\\fuzzyairuntime\\definitions.fuzzyairuntime.h",
-            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\coreuobject\\public\\uobject\\coreredirects.h",
-            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\coreuobject\\internal\\uobject\\coreredirects\\pm-k.h"
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealgame\\development\\fuzzyairuntime\\definitions.fuzzyairuntime.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

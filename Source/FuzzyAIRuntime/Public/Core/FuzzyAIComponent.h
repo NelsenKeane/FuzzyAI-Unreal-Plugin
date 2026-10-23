@@ -1,25 +1,26 @@
+// Declares the single actor component used to configure observations and expose facts, memory and change events.
+// Owns per-enemy observation state while keeping sensor definitions and current readings separate.
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Observation/ObservationRuntimeTypes.h"
-#include "Debug/FuzzyAIDebugSnapshot.h"
 #include "TimerManager.h"
 #include "FuzzyAIComponent.generated.h"
 
-class UFuzzyAIObservationRuntime;
 class UFuzzyAIObservationMemory;
 class UFuzzyObservation;
 class UFuzzyObservationStore;
 class UFuzzyObservationManager;
-class UFuzzyAIConfig;
-class UFuzzyAIPipeline;
 
+#pragma region Dispatcher Types
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFuzzyAIObservationChanged, FName, Key,
     const FFuzzyAIObservationRecord&, Previous, const FFuzzyAIObservationRecord&, Current, bool, bHadPrevious);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservationsChanged, const TArray<FName>&, ChangedKeys);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservedEventRecorded, const FFuzzyAIObservedEvent&, Event);
 
+#pragma endregion
 /** Single actor-facing entry point. Internal layers are per-enemy UObjects, not actor components. */
 UCLASS(BlueprintType, Blueprintable, ClassGroup = (FuzzyAI), meta = (BlueprintSpawnableComponent))
 class FUZZYAIRUNTIME_API UFuzzyAIComponent : public UActorComponent
@@ -29,21 +30,10 @@ class FUZZYAIRUNTIME_API UFuzzyAIComponent : public UActorComponent
 public:
     UFuzzyAIComponent();
 
-    /** Optional authoring template; assigning it does not enable automatic decisions. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fuzzy AI|Prototype")
-    TObjectPtr<UFuzzyAIConfig> DecisionConfig;
-
-    /** Captures local evidence and reports unfinished stages. Never executes an action. */
-    UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Prototype")
-    FFuzzyAIDebugSnapshot PreviewDecisionPipeline();
-
+    #pragma region Configuration
     /** Inline Blueprint/native sensor templates. Each running enemy receives its own copies. */
     UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Fuzzy AI|Observation", meta = (DisplayName = "Observations"))
     TArray<TObjectPtr<UFuzzyObservation>> ObservationInstances;
-
-    /** Compatibility path for existing asset-based observations. Stop/start to apply changes. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fuzzy AI|Observation", meta = (DisplayName = "Legacy Asset Observations"))
-    TArray<FFuzzyAIObservationEntry> Observations;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fuzzy AI")
     bool bAutoStart = true;
@@ -60,6 +50,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fuzzy AI|Memory", meta = (ClampMin = "0"))
     float ObservedEventMaxAge = 30.f;
 
+    #pragma endregion
+    #pragma region Change Dispatchers
     UPROPERTY(BlueprintAssignable, Category = "Fuzzy AI|Observation")
     FFuzzyAIObservationChanged OnObservationChanged;
 
@@ -73,6 +65,8 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Fuzzy AI|Memory")
     FFuzzyAIObservedEventRecorded OnObservedEventRecorded;
 
+    #pragma endregion
+    #pragma region Observation Lifecycle
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI")
     bool StartAI();
 
@@ -86,6 +80,8 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI")
     TArray<FString> GetConfigurationErrors() const { return ConfigurationErrors; }
 
+    #pragma endregion
+    #pragma region Refresh Requests
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     void RefreshAllObservations();
 
@@ -99,13 +95,17 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     bool RequestObservationInstanceRefresh(UFuzzyObservation* Observation);
 
-    /** Typed read access for interpretation/utility; setters accept writes only during Sample. */
+    #pragma endregion
+    #pragma region Sensor and Store Access
+    /** Typed read access for consumers; setters accept writes only during Sample. */
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     UFuzzyObservationStore* GetObservationStore() const { return ObservationStore; }
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     TArray<UFuzzyObservation*> GetRuntimeObservationInstances() const;
 
+    #pragma endregion
+    #pragma region Target and Subject Context
     /** Changing target resets visibility until perception explicitly confirms the new target. */
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     void SetTarget(AActor* NewTarget);
@@ -123,6 +123,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     void SetObservationSubjects(const TArray<AActor*>& Subjects);
 
+    #pragma endregion
+    #pragma region Current Observation Reads
     /** Return value means key exists, not that its Result is valid or fresh. */
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     bool TryGetObservation(FName Key, FFuzzyAIObservationRecord& OutRecord) const;
@@ -130,6 +132,8 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     TArray<FFuzzyAIObservationRecord> GetObservationSnapshot() const;
 
+    #pragma endregion
+    #pragma region Remembered Knowledge
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Memory")
     bool TryGetRememberedObservation(FName Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const;
 
@@ -139,6 +143,8 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Memory")
     FFuzzyAITargetLocationKnowledge GetTargetLocationKnowledge(FName LocationKey = "Target.VisibleLocation") const;
 
+    #pragma endregion
+    #pragma region Event History and Memory Control
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Memory")
     bool RecordObservedEvent(const FFuzzyAIObservedEvent& Event);
 
@@ -148,19 +154,19 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Memory")
     void ClearMemory();
 
+    #pragma endregion
+    #pragma region Engine Tick
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+    #pragma endregion
 protected:
+    #pragma region Engine Lifecycle
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+    #pragma endregion
 private:
-    UPROPERTY(Transient)
-    TObjectPtr<UFuzzyAIPipeline> PrototypePipeline;
-
-    UPROPERTY(Transient)
-    TObjectPtr<UFuzzyAIObservationRuntime> ObservationRuntime;
-
+    #pragma region Owned Observation Layers
     UPROPERTY(Transient)
     TObjectPtr<UFuzzyAIObservationMemory> MemoryRuntime;
 
@@ -170,6 +176,8 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UFuzzyObservationManager> ObservationManager;
 
+    #pragma endregion
+    #pragma region Context and Configuration State
     UPROPERTY(Transient)
     TWeakObjectPtr<AActor> CurrentTarget;
 
@@ -179,6 +187,8 @@ private:
     UPROPERTY(Transient)
     TArray<FString> ConfigurationErrors;
 
+    #pragma endregion
+    #pragma region Scheduling and Deferred Actions
     FTimerHandle SchedulerHandle;
     FTimerHandle DeferredHandle;
     TArray<TFunction<void()>> DeferredActions;
@@ -188,6 +198,8 @@ private:
     bool bEndingPlay = false;
     int32 ContextRevision = 0;
 
+    #pragma endregion
+    #pragma region Internal Coordination
     double Now() const;
     FFuzzyAIObservationContext MakeContext() const;
     void SchedulerUpdate();
@@ -199,4 +211,5 @@ private:
 
     UFUNCTION()
     void HandleTargetDestroyed(AActor* DestroyedActor);
+    #pragma endregion
 };
