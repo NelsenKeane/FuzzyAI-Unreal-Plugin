@@ -12,7 +12,8 @@ public class FuzzyAIEditor : ModuleRules
         PrivateDependencyModuleNames.AddRange(new[]
         {
             "Core", "CoreUObject", "Engine", "GameplayTags", "FuzzyAIRuntime",
-            "UnrealEd", "BlueprintGraph", "KismetCompiler",
+            "GameplayAbilities", "GameplayTasks", "AIModule", "NavigationSystem",
+            "UnrealEd", "BlueprintGraph", "KismetCompiler", "Projects",
             "Slate", "SlateCore", "InputCore", "ToolMenus", "WorkspaceMenuStructure"
         });
         #endregion

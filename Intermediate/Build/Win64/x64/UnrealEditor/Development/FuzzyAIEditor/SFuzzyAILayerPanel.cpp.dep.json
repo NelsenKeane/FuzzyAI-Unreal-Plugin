@@ -1,0 +1,17 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyailayerpanel.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\unreal projects\\gameanimationsample\\intermediate\\build\\win64\\x64\\gameanimationsampleeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_4.h.pch",
+        "Includes": [
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaieditor\\definitions.fuzzyaieditor.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyailayerpanel.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\fuzzyaidebugmodel.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\slate\\public\\widgets\\notifications\\sprogressbar.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\slate\\uht\\sprogressbar.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

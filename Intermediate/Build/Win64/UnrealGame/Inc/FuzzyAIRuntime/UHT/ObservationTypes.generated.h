@@ -18,7 +18,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 
 // ********** Begin ScriptStruct FFuzzyAIObservationContext ****************************************
 struct Z_Construct_UScriptStruct_FFuzzyAIObservationContext_Statics;
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationTypes_h_34_GENERATED_BODY \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationTypes_h_37_GENERATED_BODY \
 	friend struct ::Z_Construct_UScriptStruct_FFuzzyAIObservationContext_Statics; \
 	static class UScriptStruct* StaticStruct();
 
@@ -28,7 +28,7 @@ struct FFuzzyAIObservationContext;
 
 // ********** Begin ScriptStruct FFuzzyAIObservationResult *****************************************
 struct Z_Construct_UScriptStruct_FFuzzyAIObservationResult_Statics;
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationTypes_h_54_GENERATED_BODY \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationTypes_h_59_GENERATED_BODY \
 	friend struct ::Z_Construct_UScriptStruct_FFuzzyAIObservationResult_Statics; \
 	static class UScriptStruct* StaticStruct();
 

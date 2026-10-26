@@ -2,9 +2,15 @@
 	"RemapUnityFiles": 
 	{
 		"Module.FuzzyAIEditor.cpp.obj": [
+			"FuzzyAIEditor.init.gen.cpp.obj",
+			"FuzzyAIUtilityTestTypes.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
+			"FuzzyAIDebugModel.cpp.obj",
+			"SFuzzyAIDebugger.cpp.obj",
 			"FuzzyAIEditor.cpp.obj",
-			"FuzzyAIObservationTests.cpp.obj"
+			"FuzzyAIDebuggerTests.cpp.obj",
+			"FuzzyAIObservationTests.cpp.obj",
+			"FuzzyAIUtilityTests.cpp.obj"
 		]
 	}
 }

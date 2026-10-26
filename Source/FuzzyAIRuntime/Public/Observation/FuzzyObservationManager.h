@@ -20,16 +20,16 @@ public:
     void Shutdown();
     #pragma endregion
     #pragma region Scheduling and Sensor Lookup
-    TArray<FName> GetIds() const;
-    TArray<FName> GetDueIds(double Time, bool bEveryFrame) const;
-    TArray<FName> GetContextDependentIds() const;
+    TArray<FName> GetSensorNames() const;
+    TArray<FName> GetDueSensorNames(double Time, bool bEveryFrame) const;
+    TArray<FName> GetContextDependentSensorNames() const;
     float GetSchedulerInterval() const;
     bool NeedsEveryFrame() const;
-    UFuzzyObservation* FindObservation(FName IdOrKey, const UFuzzyObservationStore* Store) const;
+    UFuzzyObservation* FindObservation(FGameplayTag Key) const;
     bool Contains(const UFuzzyObservation* Observation) const;
     #pragma endregion
     #pragma region Sampling and Runtime Instances
-    void Sample(const TArray<FName>& Ids, UFuzzyObservationStore* Store, const FFuzzyAIObservationContext& Context, int32 Revision, double Time);
+    void Sample(const TArray<FName>& SensorNames, UFuzzyObservationStore* Store, const FFuzzyAIObservationContext& Context, int32 Revision, double Time);
     const TArray<TObjectPtr<UFuzzyObservation>>& GetInstances() const { return Instances; }
 
     #pragma endregion

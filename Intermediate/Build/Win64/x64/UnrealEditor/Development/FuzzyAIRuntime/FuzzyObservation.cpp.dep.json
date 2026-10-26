@@ -19,6 +19,10 @@
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservationstore.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\fuzzyaicomponent.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\core\\fuzzyaicomponent.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaitypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaidebugtypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaidebugtypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaitypes.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaicomponent.generated.h"
         ],
         "ImportedModules": [],

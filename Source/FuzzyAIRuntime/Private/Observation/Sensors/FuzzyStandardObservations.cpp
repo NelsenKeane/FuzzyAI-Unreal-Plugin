@@ -3,12 +3,15 @@
 
 #include "Observation/Sensors/FuzzyStandardObservations.h"
 #include "Observation/FuzzyObservationStore.h"
+#include "Observation/ObservationKeys.h"
 #include "GameFramework/Actor.h"
 
 #pragma region Distance Sensor
 UFuzzyDistanceObservation::UFuzzyDistanceObservation()
 {
-    ObservationKey = TEXT("Target.Distance");
+    FFuzzyAIObservationOutput Output;
+    Output.Key = NKFuzzyAI::ObservationKeys::TargetDistance;
+    Outputs.Add(Output);
     Subject = EFuzzyAIObservationSubject::Target;
     bRequiresVisibleTarget = true;
 }
@@ -17,11 +20,11 @@ void UFuzzyDistanceObservation::Sample_Implementation(AActor* Observer, AActor* 
 {
     if (IsValid(Observer) && IsValid(Target) && GetObservationContext().bTargetVisible)
     {
-        Store->SetFloat(ObservationKey, Observer->GetDistanceTo(Target));
+        Store->SetFloat(GetOutputKey(), Observer->GetDistanceTo(Target));
     }
     else
     {
-        Store->Invalidate(ObservationKey, TEXT("A visible target and valid observer are required."));
+        Store->Invalidate(GetOutputKey(), TEXT("A visible target and valid observer are required."));
     }
 }
 
@@ -29,37 +32,41 @@ void UFuzzyDistanceObservation::Sample_Implementation(AActor* Observer, AActor* 
 #pragma region Line Of Sight Sensor
 UFuzzyLineOfSightObservation::UFuzzyLineOfSightObservation()
 {
-    ObservationKey = TEXT("Target.HasLineOfSight");
-    ExpectedValueType = EFuzzyAIObservationValueType::Boolean;
+    FFuzzyAIObservationOutput Output;
+    Output.Key = NKFuzzyAI::ObservationKeys::TargetHasLineOfSight;
+    Output.ValueType = EFuzzyAIObservationValueType::Boolean;
+    Outputs.Add(Output);
     Subject = EFuzzyAIObservationSubject::Target;
     UpdatePolicy = EFuzzyAIObservationUpdatePolicy::SourceEvent;
 }
 
 void UFuzzyLineOfSightObservation::Sample_Implementation(AActor* Observer, AActor* Target, UFuzzyObservationStore* Store)
 {
-    Store->SetBoolean(ObservationKey, GetObservationContext().bTargetVisible);
+    Store->SetBoolean(GetOutputKey(), GetObservationContext().bTargetVisible);
 }
 
 #pragma endregion
 #pragma region Target Location Sensor
 UFuzzyTargetLocationObservation::UFuzzyTargetLocationObservation()
 {
-    ObservationKey = TEXT("Target.VisibleLocation");
-    ExpectedValueType = EFuzzyAIObservationValueType::Vector;
+    FFuzzyAIObservationOutput Output;
+    Output.Key = NKFuzzyAI::ObservationKeys::TargetVisibleLocation;
+    Output.ValueType = EFuzzyAIObservationValueType::Vector;
+    Output.bRememberLastSuccessful = true;
+    Outputs.Add(Output);
     Subject = EFuzzyAIObservationSubject::Target;
     bRequiresVisibleTarget = true;
-    bRememberLastSuccessful = true;
 }
 
 void UFuzzyTargetLocationObservation::Sample_Implementation(AActor* Observer, AActor* Target, UFuzzyObservationStore* Store)
 {
     if (IsValid(Target) && GetObservationContext().bTargetVisible)
     {
-        Store->SetVector(ObservationKey, Target->GetActorLocation());
+        Store->SetVector(GetOutputKey(), Target->GetActorLocation());
     }
     else
     {
-        Store->Invalidate(ObservationKey, TEXT("Target is not currently visible."));
+        Store->Invalidate(GetOutputKey(), TEXT("Target is not currently visible."));
     }
 }
 #pragma endregion

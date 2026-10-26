@@ -13,19 +13,10 @@ void UFuzzyObservation::OnShutdown_Implementation() {}
 void UFuzzyObservation::OnContextChanged_Implementation(const FFuzzyAIObservationContext& Previous, const FFuzzyAIObservationContext& Current) {}
 
 #pragma endregion
-#pragma region Sensor Identity and Settings
-FName UFuzzyObservation::GetId() const
+#pragma region Output Keys and Context Policy
+FGameplayTag UFuzzyObservation::GetOutputKey(int32 OutputIndex) const
 {
-    return !ObservationId.IsNone() ? ObservationId : (!ObservationKey.IsNone() ? ObservationKey : GetFName());
-}
-
-FFuzzyAIObservationSettings UFuzzyObservation::GetSettings() const
-{
-    FFuzzyAIObservationSettings Settings;
-    Settings.ChangeTolerance = ChangeTolerance;
-    Settings.bRememberLastSuccessful = bRememberLastSuccessful;
-    Settings.MemoryDuration = MemoryDuration;
-    return Settings;
+    return Outputs.IsValidIndex(OutputIndex) ? Outputs[OutputIndex].Key : FGameplayTag();
 }
 
 bool UFuzzyObservation::IsTargetDependent() const

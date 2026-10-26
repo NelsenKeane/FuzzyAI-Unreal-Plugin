@@ -19,12 +19,14 @@ class AActor;
 class UFuzzyObservationStore;
 struct FFuzzyAIObservationContext;
 struct FFuzzyAIObservedEvent;
+struct FGameplayTag;
 
 // ********** Begin Class UFuzzyObservation ********************************************************
 #define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_FuzzyObservation_h_18_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execOnContextChanged); \
 	DECLARE_FUNCTION(execOnShutdown); \
 	DECLARE_FUNCTION(execOnInitialize); \
+	DECLARE_FUNCTION(execGetOutputKey); \
 	DECLARE_FUNCTION(execGetObservationStore); \
 	DECLARE_FUNCTION(execRecordObservedEvent); \
 	DECLARE_FUNCTION(execRequestRefresh); \

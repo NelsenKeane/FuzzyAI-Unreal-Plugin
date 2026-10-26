@@ -16,51 +16,51 @@ class FUZZYAIRUNTIME_API UFuzzyObservationStore : public UObject
 public:
     #pragma region Typed Writes and Invalidation
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetFloat(FName Key, float Value);
+    bool SetFloat(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, float Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetInteger(FName Key, int32 Value);
+    bool SetInteger(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, int32 Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetBoolean(FName Key, bool Value);
+    bool SetBoolean(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, bool Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetVector(FName Key, FVector Value);
+    bool SetVector(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FVector Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetObject(FName Key, UObject* Value);
+    bool SetObject(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, UObject* Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetGameplayTag(FName Key, FGameplayTag Value);
+    bool SetGameplayTag(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FGameplayTag Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool SetResult(FName Key, const FFuzzyAIObservationResult& Value);
+    bool SetResult(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, const FFuzzyAIObservationResult& Value);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation Store")
-    bool Invalidate(FName Key, const FString& Reason);
+    bool Invalidate(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, const FString& Reason);
 
     #pragma endregion
     #pragma region Typed Reads and Diagnostics
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetFloat(FName Key, float& OutValue) const;
+    bool GetFloat(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, float& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetInteger(FName Key, int32& OutValue) const;
+    bool GetInteger(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, int32& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetBoolean(FName Key, bool& OutValue) const;
+    bool GetBoolean(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, bool& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetVector(FName Key, FVector& OutValue) const;
+    bool GetVector(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FVector& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetObject(FName Key, UObject*& OutValue) const;
+    bool GetObject(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, UObject*& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool GetGameplayTag(FName Key, FGameplayTag& OutValue) const;
+    bool GetGameplayTag(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FGameplayTag& OutValue) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
-    bool TryGetObservation(FName Key, FFuzzyAIObservationRecord& OutRecord) const;
+    bool TryGetObservation(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FFuzzyAIObservationRecord& OutRecord) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation Store")
     TArray<FFuzzyAIObservationRecord> GetSnapshot() const;
@@ -72,45 +72,42 @@ public:
     #pragma region Managed Sampling Transactions
     void Reset();
     void BeginBatch(double Time);
-    void BeginSample(UObject* Writer, FName PrimaryKey, EFuzzyAIObservationValueType PrimaryType,
-        const FFuzzyAIObservationSettings& Settings, bool bTargetDependent,
+    void BeginSample(UObject* Writer, const TArray<FFuzzyAIObservationOutput>& Outputs, bool bTargetDependent,
         const FFuzzyAIObservationContext& Context, int32 ContextRevision);
     void EndSample();
     void InvalidateCurrentSample(const FString& Reason);
-    TArray<FFuzzyAIObservationChange> Commit(TArray<FName>& OutSampledKeys);
-    const FFuzzyAIObservationSettings* FindSettings(FName Key) const;
-    UObject* FindWriter(FName Key) const;
+    TArray<FFuzzyAIObservationChange> Commit(TArray<FGameplayTag>& OutSampledKeys);
+    const FFuzzyAIObservationSettings* FindSettings(FGameplayTag Key) const;
+    UObject* FindWriter(FGameplayTag Key) const;
 
     #pragma endregion
 private:
     #pragma region Records and Output Ownership
     UPROPERTY(Transient)
-    TMap<FName, FFuzzyAIObservationRecord> Records;
+    TMap<FGameplayTag, FFuzzyAIObservationRecord> Records;
 
     UPROPERTY(Transient)
-    TMap<FName, FFuzzyAIObservationRecord> LastNotified;
+    TMap<FGameplayTag, FFuzzyAIObservationRecord> LastNotified;
 
     UPROPERTY(Transient)
-    TMap<FName, FFuzzyAIObservationRecord> Pending;
+    TMap<FGameplayTag, FFuzzyAIObservationRecord> Pending;
 
     UPROPERTY(Transient)
-    TMap<FName, FFuzzyAIObservationSettings> SettingsByKey;
+    TMap<FGameplayTag, FFuzzyAIObservationSettings> SettingsByKey;
 
     UPROPERTY(Transient)
-    TMap<FName, TWeakObjectPtr<UObject>> Writers;
+    TMap<FGameplayTag, TWeakObjectPtr<UObject>> Writers;
 
     UPROPERTY(Transient)
     TArray<FString> WriteErrors;
 
     #pragma endregion
     #pragma region Active Transaction State
-    TArray<FName> PendingOrder;
-    TSet<FName> Conflicts;
+    TArray<FGameplayTag> PendingOrder;
+    TSet<FGameplayTag> Conflicts;
     TWeakObjectPtr<UObject> ActiveWriter;
     FFuzzyAIObservationRecord SampleMetadata;
-    FFuzzyAIObservationSettings ActiveSettings;
-    FName ActivePrimaryKey;
-    EFuzzyAIObservationValueType ActivePrimaryType = EFuzzyAIObservationValueType::Float;
+    TMap<FGameplayTag, FFuzzyAIObservationOutput> ActiveOutputs;
     double BatchTime = 0.;
     bool bBatchOpen = false;
     #pragma endregion

@@ -9,15 +9,21 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "HAL/PlatformTime.h"
+#include "Framework/Application/SlateApplication.h"
+#include "InputCoreTypes.h"
 #include "Styling/AppStyle.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SSearchBox.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SExpandableArea.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SSplitter.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
 #include "Widgets/Views/STableRow.h"
@@ -27,6 +33,9 @@
 #pragma region Table Row
 namespace FuzzyAIDebugger
 {
+    constexpr float MinimumPanelHeight = 180.f;
+    constexpr float MinimumTableWidth = 1100.f;
+
     class SDataRow : public SMultiColumnTableRow<TSharedPtr<FFuzzyAIDebugRow>>
     {
     public:
@@ -79,109 +88,108 @@ void SFuzzyAIDebugger::Construct(const FArguments& Arguments)
                 + SHorizontalBox::Slot().FillWidth(1.f).VAlign(VAlign_Center)
                 [
                     SNew(STextBlock)
-                    .Text(LOCTEXT("Heading", "FuzzyAI Enemy Debugger"))
+                    .Text(LOCTEXT("Heading", "FuzzyAI"))
+                    .ToolTipText(LOCTEXT("DebuggerHelp", "Local cached data. Select an enemy and switch layers. Hover cells for details."))
                     .Font(FAppStyle::GetFontStyle("HeadingExtraSmall"))
                 ]
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(8.f, 0.f)
                 [
                     SNew(SCheckBox)
                     .IsChecked_Lambda([this]() { return bLiveUpdates ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-                    .OnCheckStateChanged_Lambda([this](ECheckBoxState State)
-                    {
-                        bLiveUpdates = State == ECheckBoxState::Checked;
-                        if (bLiveUpdates) Refresh();
-                    })
-                    .ToolTipText(LOCTEXT("LiveTooltip", "Refresh this display every 0.25 seconds. This does not request new sensor samples."))
-                    [ SNew(STextBlock).Text(LOCTEXT("Live", "Live updates")) ]
+                    .OnCheckStateChanged_Lambda([this](ECheckBoxState State) { bLiveUpdates = State == ECheckBoxState::Checked; })
+                    [ SNew(STextBlock).Text(LOCTEXT("Live", "Live")) ]
                 ]
                 + SHorizontalBox::Slot().AutoWidth()
                 [
-                    SNew(SButton)
-                    .Text(LOCTEXT("Refresh", "Refresh view"))
+                    SNew(SButton).Text(LOCTEXT("Refresh", "Refresh"))
+                    .ToolTipText(LOCTEXT("RefreshHelp", "Refresh cached data without evaluating AI."))
                     .OnClicked_Lambda([this]() { Refresh(); return FReply::Handled(); })
                 ]
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 8.f)
-            [
-                SNew(STextBlock)
-                .Text(LOCTEXT("ReadOnly", "Read-only local data. Start Play or Simulate to inspect running enemies. Server-only AI is shown in the server world."))
-                .AutoWrapText(true)
-            ]
             + SVerticalBox::Slot().FillHeight(1.f)
             [
-                SNew(SSplitter)
-                + SSplitter::Slot().Value(0.24f)
+                SNew(SOverlay).Clipping(EWidgetClipping::ClipToBounds)
+                + SOverlay::Slot()
                 [
                     SNew(SVerticalBox)
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 8.f, 6.f)
-                    [
-                        SNew(STextBlock)
-                        .Text_Lambda([this]() { return FText::Format(LOCTEXT("EnemyCount", "Enemies ({0})"), FText::AsNumber(FilteredEnemies.Num())); })
-                        .Font(FAppStyle::GetFontStyle("BoldFont"))
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 8.f, 6.f)
-                    [
-                        SNew(SSearchBox)
-                        .HintText(LOCTEXT("Search", "Search enemy or world"))
-                        .OnTextChanged(this, &SFuzzyAIDebugger::OnSearchChanged)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 8.f, 6.f)
-                    [
-                        SNew(SButton)
-                        .Text(LOCTEXT("InspectSelected", "Inspect selected actor"))
-                        .ToolTipText(LOCTEXT("InspectSelectedTooltip", "Inspect a FuzzyAI component on the actor selected in this editor or play world."))
-                        .OnClicked(this, &SFuzzyAIDebugger::InspectEditorSelection)
-                    ]
-                    + SVerticalBox::Slot().FillHeight(1.f).Padding(0.f, 0.f, 8.f, 0.f)
-                    [
-                        SAssignNew(EnemyList, SListView<TSharedPtr<FFuzzyAIDebugEnemy>>)
-                        .ListItemsSource(&FilteredEnemies)
-                        .SelectionMode(ESelectionMode::Single)
-                        .OnGenerateRow(this, &SFuzzyAIDebugger::MakeEnemyRow)
-                        .OnSelectionChanged(this, &SFuzzyAIDebugger::OnEnemySelected)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 6.f, 8.f, 0.f)
-                    [
-                        SNew(STextBlock)
-                        .AutoWrapText(true)
-                        .Text_Lambda([this]()
-                        {
-                            return Enemies.IsEmpty()
-                                ? LOCTEXT("NoEnemies", "No FuzzyAI components found. Add FuzzyAIComponent to an enemy. During play, only game worlds are listed.")
-                                : FilteredEnemies.IsEmpty() ? LOCTEXT("NoMatches", "No enemies match this search.") : FText::GetEmpty();
-                        })
-                    ]
-                ]
-                + SSplitter::Slot().Value(0.76f)
-                [
-                    SNew(SVerticalBox)
-                    + SVerticalBox::Slot().AutoHeight().Padding(8.f, 0.f, 0.f, 4.f)
-                    [
-                        SAssignNew(TitleText, STextBlock).Font(FAppStyle::GetFontStyle("BoldFont")).AutoWrapText(true)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(8.f, 0.f, 0.f, 6.f)
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 4.f)
+                    [ SAssignNew(TitleText, STextBlock).Font(FAppStyle::GetFontStyle("BoldFont")).AutoWrapText(true) ]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
                     [ SAssignNew(SummaryText, STextBlock).AutoWrapText(true) ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(8.f, 0.f, 0.f, 6.f).MaxHeight(90.f)
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
                     [
-                        SAssignNew(DiagnosticsText, STextBlock).AutoWrapText(true)
+                        MakeLayerTabs()
+                    ]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
+                    [
+                        SAssignNew(DiagnosticsText, STextBlock)
                         .ColorAndOpacity(FLinearColor(1.f, 0.65f, 0.35f))
                     ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(8.f, 0.f, 0.f, 6.f)
-                    [ SNew(SSeparator) ]
-                    + SVerticalBox::Slot().FillHeight(1.f).Padding(8.f, 0.f, 0.f, 0.f)
+                    + SVerticalBox::Slot().FillHeight(1.f)
                     [
-                        SNew(SSplitter).Orientation(Orient_Vertical)
-                        + SSplitter::Slot().Value(0.38f)
-                        [ MakeDataPanel(LOCTEXT("Store", "Observation Store"), Snapshot.Store, StoreList,
-                            LOCTEXT("EmptyStore", "No current readings. The component may be stopped or have no configured sensors.")) ]
-                        + SSplitter::Slot().Value(0.34f)
-                        [ MakeDataPanel(LOCTEXT("Memory", "Remembered Facts"), Snapshot.Memory, MemoryList,
-                            LOCTEXT("EmptyMemory", "No remembered facts. Enable Remember Last Successful on a sensor; expired facts are omitted.")) ]
-                        + SSplitter::Slot().Value(0.28f)
-                        [ MakeDataPanel(LOCTEXT("Events", "Observed Events (newest first)"), Snapshot.Events, EventList,
-                            LOCTEXT("EmptyEvents", "No observed events. Events appear when gameplay calls Record Observed Event.")) ]
+                        SAssignNew(LayerSwitcher, SWidgetSwitcher)
+                        .WidgetIndex_Lambda([this]() { return static_cast<int32>(DebugView); })
+                        + SWidgetSwitcher::Slot()
+                        [
+                        SNew(SScrollBox)
+                        + SScrollBox::Slot().FillContentSize(1.f, 0.f)
+                        [
+                            SNew(SBox).MinDesiredHeight_Lambda([this]() { return FOptionalSize(GetMinimumObservationHeight()); })
+                            [
+                            SNew(SSplitter).Orientation(Orient_Vertical)
+                            .Tag(TEXT("FuzzyAI.ObservationSplitter"))
+                            .PhysicalSplitterHandleSize(4.f).HitDetectionSplitterHandleSize(6.f)
+                            + SSplitter::Slot().Value(0.40f)
+                            .MinSize_Lambda([this]() { return StoreArea->IsExpanded() ? FuzzyAIDebugger::MinimumPanelHeight : 0.f; })
+                            .SizeRule_Lambda([this]() { return StoreArea->IsExpanded() ? SSplitter::FractionOfParent : SSplitter::SizeToContent; })
+                            [ MakeDataPanel(LOCTEXT("Store", "Observations"), Snapshot.Store, StoreList, StoreArea,
+                                LOCTEXT("EmptyStore", "No readings")) ]
+                            + SSplitter::Slot().Value(0.32f)
+                            .MinSize_Lambda([this]() { return MemoryArea->IsExpanded() ? FuzzyAIDebugger::MinimumPanelHeight : 0.f; })
+                            .SizeRule_Lambda([this]() { return MemoryArea->IsExpanded() ? SSplitter::FractionOfParent : SSplitter::SizeToContent; })
+                            [ MakeDataPanel(LOCTEXT("Memory", "Memory"), Snapshot.Memory, MemoryList, MemoryArea,
+                                LOCTEXT("EmptyMemory", "No memory")) ]
+                            + SSplitter::Slot().Value(0.28f)
+                            .MinSize_Lambda([this]() { return EventArea->IsExpanded() ? FuzzyAIDebugger::MinimumPanelHeight : 0.f; })
+                            .SizeRule_Lambda([this]() { return EventArea->IsExpanded() ? SSplitter::FractionOfParent : SSplitter::SizeToContent; })
+                            [ MakeDataPanel(LOCTEXT("Events", "Events"), Snapshot.Events, EventList, EventArea,
+                                LOCTEXT("EmptyEvents", "No events")) ]
+                            ]
+                        ]
+                        ]
+                        + SWidgetSwitcher::Slot()
+                        [SAssignNew(FuzzyPanel,SFuzzyAILayerPanel).Snapshot(&Snapshot).View(EFuzzyAIDebugView::Fuzzy).Tag(TEXT("FuzzyAI.Decisions"))]
+                        + SWidgetSwitcher::Slot()
+                        [SAssignNew(UtilityPanel,SFuzzyAILayerPanel).Snapshot(&Snapshot).View(EFuzzyAIDebugView::Utility).Tag(TEXT("FuzzyAI.Decisions"))]
+                        + SWidgetSwitcher::Slot()
+                        [SAssignNew(ExecutionPanel,SFuzzyAILayerPanel).Snapshot(&Snapshot).View(EFuzzyAIDebugView::Execution).Tag(TEXT("FuzzyAI.Decisions"))]
                     ]
                 ]
+                + SOverlay::Slot()
+                [
+                    SNew(SBorder).BorderImage(FAppStyle::GetBrush("WhiteBrush"))
+                    .BorderBackgroundColor(FLinearColor(0.f, 0.f, 0.f, 0.2f))
+                    .Visibility_Lambda([this]() { return bEnemyDrawerOpen ? EVisibility::Visible : EVisibility::Collapsed; })
+                    .OnMouseButtonDown_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                    {
+                        if (Event.GetEffectingButton() != EKeys::LeftMouseButton) return FReply::Unhandled();
+                        SetEnemyDrawerOpen(false);
+                        return FReply::Handled();
+                    })
+                ]
+                + SOverlay::Slot().VAlign(VAlign_Bottom)
+                [ MakeEnemyDrawer() ]
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.f, 6.f, 0.f, 0.f)
+            [
+                SNew(SButton)
+                .ToolTipText(LOCTEXT("EnemyDrawerTooltip", "Open or close the enemy picker. Selecting an enemy, clicking outside, or Escape closes the drawer."))
+                .Text_Lambda([this]()
+                {
+                    return FText::Format(bEnemyDrawerOpen ? LOCTEXT("CloseEnemies", "Close ({0})") : LOCTEXT("OpenEnemies", "Enemies ({0})"),
+                        FText::AsNumber(FilteredEnemies.Num()));
+                })
+                .OnClicked_Lambda([this]() { SetEnemyDrawerOpen(!bEnemyDrawerOpen); return FReply::Handled(); })
             ]
         ]
     ];
@@ -190,38 +198,131 @@ void SFuzzyAIDebugger::Construct(const FArguments& Arguments)
     RegisterActiveTimer(0.25f, FWidgetActiveTimerDelegate::CreateSP(this, &SFuzzyAIDebugger::UpdateDisplay));
 }
 
+TSharedRef<SWidget> SFuzzyAIDebugger::MakeEnemyDrawer()
+{
+    return SNew(SBox)
+        .Visibility_Lambda([this]() { return bEnemyDrawerOpen ? EVisibility::Visible : EVisibility::Collapsed; })
+        .HeightOverride_Lambda([this]() { return FMath::Clamp(GetCachedGeometry().GetLocalSize().Y * 0.5f, 100.f, 300.f); })
+        [
+            SNew(SBorder).BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder")).Padding(10.f)
+            .OnMouseButtonDown_Lambda([](const FGeometry&, const FPointerEvent&) { return FReply::Handled(); })
+            [
+                SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().FillWidth(1.f).Padding(0.f, 0.f, 8.f, 0.f)
+                    [
+                        SAssignNew(EnemySearch, SSearchBox)
+                        .HintText(LOCTEXT("Search", "Search"))
+                        .OnTextChanged(this, &SFuzzyAIDebugger::OnSearchChanged)
+                    ]
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [
+                        SNew(SButton).Text(LOCTEXT("InspectSelected", "Inspect"))
+                        .ToolTipText(LOCTEXT("InspectSelectedTooltip", "Inspect a FuzzyAI component on the actor selected in this editor or play world."))
+                        .OnClicked(this, &SFuzzyAIDebugger::InspectEditorSelection)
+                    ]
+                ]
+                + SVerticalBox::Slot().FillHeight(1.f)
+                [
+                    SAssignNew(EnemyList, SListView<TSharedPtr<FFuzzyAIDebugEnemy>>)
+                    .ListItemsSource(&FilteredEnemies)
+                    .SelectionMode(ESelectionMode::Single)
+                    .OnGenerateRow(this, &SFuzzyAIDebugger::MakeEnemyRow)
+                    .OnSelectionChanged(this, &SFuzzyAIDebugger::OnEnemySelected)
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 6.f, 0.f, 0.f)
+                [
+                    SNew(STextBlock).AutoWrapText(true)
+                    .Text_Lambda([this]()
+                    {
+                        return Enemies.IsEmpty()
+                            ? LOCTEXT("NoEnemies", "No enemies")
+                            : FilteredEnemies.IsEmpty() ? LOCTEXT("NoMatches", "No matches") : FText::GetEmpty();
+                    })
+                ]
+            ]
+        ];
+}
+
+float SFuzzyAIDebugger::GetMinimumObservationHeight() const
+{
+    float Height = 8.f; // Two splitter handles must fit in addition to the panel minimums.
+    for (const auto& Area : {StoreArea, MemoryArea, EventArea})
+    {
+        Height += !Area.IsValid() || Area->IsExpanded() ? FuzzyAIDebugger::MinimumPanelHeight : Area->GetDesiredSize().Y;
+    }
+    return Height;
+}
+
+void SFuzzyAIDebugger::SetEnemyDrawerOpen(bool bOpen)
+{
+    bEnemyDrawerOpen = bOpen;
+    if (FSlateApplication::IsInitialized() && GetCachedGeometry().GetLocalSize().Y > 0.f)
+    {
+        if (bOpen) FSlateApplication::Get().SetKeyboardFocus(EnemySearch, EFocusCause::SetDirectly);
+        else FSlateApplication::Get().SetKeyboardFocus(SharedThis(this), EFocusCause::SetDirectly);
+    }
+}
+
+FReply SFuzzyAIDebugger::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
+{
+    if (bEnemyDrawerOpen && KeyEvent.GetKey() == EKeys::Escape)
+    {
+        SetEnemyDrawerOpen(false);
+        return FReply::Handled();
+    }
+    return SCompoundWidget::OnKeyDown(MyGeometry, KeyEvent);
+}
+
 TSharedRef<SWidget> SFuzzyAIDebugger::MakeDataPanel(const FText& Label, TArray<TSharedPtr<FFuzzyAIDebugRow>>& Rows,
-    TSharedPtr<SListView<TSharedPtr<FFuzzyAIDebugRow>>>& List, const FText& EmptyMessage)
+    TSharedPtr<SListView<TSharedPtr<FFuzzyAIDebugRow>>>& List, TSharedPtr<SExpandableArea>& Area, const FText& EmptyMessage)
 {
     auto* RowsSource = &Rows;
-    return SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().Padding(0.f, 4.f)
+    return SAssignNew(Area, SExpandableArea)
+        .AllowAnimatedTransition(false)
+        .BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+        .HeaderPadding(FMargin(4.f, 6.f))
+        .Padding(4.f)
+        .HeaderContent()
         [
             SNew(STextBlock).Font(FAppStyle::GetFontStyle("BoldFont"))
             .Text_Lambda([Label, RowsSource]() { return FText::Format(LOCTEXT("PanelCount", "{0} ({1})"), Label, FText::AsNumber(RowsSource->Num())); })
         ]
-        + SVerticalBox::Slot().FillHeight(1.f)
+        .BodyContent()
         [
-            SAssignNew(List, SListView<TSharedPtr<FFuzzyAIDebugRow>>)
-            .ListItemsSource(RowsSource)
-            .SelectionMode(ESelectionMode::None)
-            .OnGenerateRow(this, &SFuzzyAIDebugger::MakeDataRow)
-            .HeaderRow
-            (
-                SNew(SHeaderRow)
-                + SHeaderRow::Column(TEXT("Key")).DefaultLabel(LOCTEXT("Key", "Key")).FillWidth(0.20f)
-                + SHeaderRow::Column(TEXT("Type")).DefaultLabel(LOCTEXT("Type", "Type")).FillWidth(0.08f)
-                + SHeaderRow::Column(TEXT("Value")).DefaultLabel(LOCTEXT("Value", "Value")).FillWidth(0.19f)
-                + SHeaderRow::Column(TEXT("State")).DefaultLabel(LOCTEXT("State", "State")).FillWidth(0.09f)
-                + SHeaderRow::Column(TEXT("Subject")).DefaultLabel(LOCTEXT("Subject", "Target / Subject")).FillWidth(0.13f)
-                + SHeaderRow::Column(TEXT("Age")).DefaultLabel(LOCTEXT("Age", "Age")).FillWidth(0.08f)
-                + SHeaderRow::Column(TEXT("Details")).DefaultLabel(LOCTEXT("Details", "Details")).FillWidth(0.23f)
-            )
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(0.f, 3.f)
-        [
-            SNew(STextBlock).AutoWrapText(true).Text(EmptyMessage)
-            .Visibility_Lambda([RowsSource]() { return RowsSource->IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().FillHeight(1.f)
+            [
+                SNew(SScrollBox).Orientation(Orient_Horizontal)
+                + SScrollBox::Slot().FillContentSize(1.f, 0.f)
+                [
+                SNew(SBox).MinDesiredWidth(FuzzyAIDebugger::MinimumTableWidth)
+                [
+                SAssignNew(List, SListView<TSharedPtr<FFuzzyAIDebugRow>>)
+                .ListItemsSource(RowsSource)
+                .SelectionMode(ESelectionMode::None)
+                .OnGenerateRow(this, &SFuzzyAIDebugger::MakeDataRow)
+                .HeaderRow
+                (
+                    SNew(SHeaderRow)
+                    + SHeaderRow::Column(TEXT("Key")).DefaultLabel(LOCTEXT("Key", "Key")).FillWidth(0.20f)
+                    + SHeaderRow::Column(TEXT("Type")).DefaultLabel(LOCTEXT("Type", "Type")).FillWidth(0.08f)
+                    + SHeaderRow::Column(TEXT("Value")).DefaultLabel(LOCTEXT("Value", "Value")).FillWidth(0.19f)
+                    + SHeaderRow::Column(TEXT("State")).DefaultLabel(LOCTEXT("State", "State")).FillWidth(0.09f)
+                    + SHeaderRow::Column(TEXT("Subject")).DefaultLabel(LOCTEXT("Subject", "Target / Subject")).FillWidth(0.13f)
+                    + SHeaderRow::Column(TEXT("Age")).DefaultLabel(LOCTEXT("Age", "Age")).FillWidth(0.08f)
+                    + SHeaderRow::Column(TEXT("Details")).DefaultLabel(LOCTEXT("Details", "Details")).FillWidth(0.23f)
+                )
+                ]
+                ]
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.f, 3.f)
+            [
+                SNew(STextBlock).AutoWrapText(true).Text(EmptyMessage)
+                .Visibility_Lambda([RowsSource]() { return RowsSource->IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
+            ]
         ];
 }
 #pragma endregion
@@ -308,6 +409,7 @@ void SFuzzyAIDebugger::OnEnemySelected(TSharedPtr<FFuzzyAIDebugEnemy> Enemy, ESe
 {
     SelectedComponent = Enemy ? Enemy->Component : TWeakObjectPtr<UFuzzyAIComponent>();
     RefreshDetails();
+    if (Enemy && SelectInfo != ESelectInfo::Direct) SetEnemyDrawerOpen(false);
 }
 
 void SFuzzyAIDebugger::OnSearchChanged(const FText& Text)
@@ -330,7 +432,11 @@ FReply SFuzzyAIDebugger::InspectEditorSelection()
                 Actor->GetComponents<UFuzzyAIComponent>(Components);
                 for (UFuzzyAIComponent* Component : Components)
                 {
-                    if (SelectComponent(Component)) return FReply::Handled();
+                    if (SelectComponent(Component))
+                    {
+                        SetEnemyDrawerOpen(false);
+                        return FReply::Handled();
+                    }
                 }
             }
         }
@@ -390,15 +496,43 @@ void SFuzzyAIDebugger::RefreshDetails()
     {
         SelectedComponent.Reset();
     }
-    TitleText->SetText(Snapshot.bAvailable ? FText::FromString(Snapshot.Title) : LOCTEXT("ChooseEnemy", "Select an enemy to inspect"));
+    TitleText->SetText(Snapshot.bAvailable ? FText::FromString(Snapshot.Title) : LOCTEXT("ChooseEnemy", "Select enemy"));
     SummaryText->SetText(Snapshot.bAvailable ? FText::FromString(Snapshot.Summary)
-        : LOCTEXT("ChooseHelp", "Choose a FuzzyAI component from the list. Store and memory are separate views of this enemy's knowledge."));
-    DiagnosticsText->SetText(FText::FromString(Snapshot.Diagnostics));
+        : FText::GetEmpty());
+    SummaryText->SetVisibility(Snapshot.bAvailable ? EVisibility::Visible : EVisibility::Collapsed);
+    SummaryText->SetToolTipText(Snapshot.bAvailable && SelectedComponent.IsValid() ? FText::FromString(FString::Printf(
+        TEXT("%s\nSensors %d / %d | Memory %d | Events %d | Event age %.2fs"),
+        *SelectedComponent->GetPathName(), SelectedComponent->ObservationInstances.Num(), SelectedComponent->GetRuntimeObservationInstances().Num(),
+        SelectedComponent->MaxRememberedObservations, SelectedComponent->MaxObservedEvents, SelectedComponent->ObservedEventMaxAge)) : FText::GetEmpty());
+    DiagnosticsText->SetText(LOCTEXT("Issues", "Issues"));
     DiagnosticsText->SetToolTipText(FText::FromString(Snapshot.Diagnostics));
     DiagnosticsText->SetVisibility(Snapshot.Diagnostics.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible);
     StoreList->RequestListRefresh();
     MemoryList->RequestListRefresh();
     EventList->RequestListRefresh();
+    FuzzyPanel->Refresh(); UtilityPanel->Refresh(); ExecutionPanel->Refresh();
+}
+
+TSharedRef<SWidget> SFuzzyAIDebugger::MakeLayerTabs()
+{
+    auto Tabs = SNew(SHorizontalBox);
+    const TCHAR* Labels[] = {TEXT("Facts"),TEXT("Fuzzy"),TEXT("Utility"),TEXT("Run")};
+    const TCHAR* Help[] = {TEXT("Observations, memory and events"),TEXT("Estimates, memberships and fuzzy rules"),TEXT("Action scores, factors and eligibility"),TEXT("Execution, cooldowns and transitions")};
+    for (int32 i = 0; i < 4; ++i)
+    {
+        const auto View = static_cast<EFuzzyAIDebugView>(i);
+        Tabs->AddSlot().AutoWidth().Padding(0.f,0.f,6.f,0.f)
+        [SNew(SCheckBox).Style(FAppStyle::Get(),TEXT("ToggleButtonCheckbox"))
+            .IsChecked_Lambda([this,View]() { return DebugView == View ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+            .OnCheckStateChanged_Lambda([this,View](ECheckBoxState State) { if (State == ECheckBoxState::Checked) SetDebugView(View); })
+            .ToolTipText(FText::FromString(Help[i]))[SNew(STextBlock).Text(FText::FromString(Labels[i]))]];
+    }
+    return Tabs;
+}
+bool SFuzzyAIDebugger::SelectDebugTrace(FName Owner, const FString& Path)
+{
+    return DebugView == EFuzzyAIDebugView::Fuzzy ? FuzzyPanel->SelectTrace(Owner,Path) :
+        DebugView == EFuzzyAIDebugView::Utility && UtilityPanel->SelectTrace(Owner,Path);
 }
 #pragma endregion
 

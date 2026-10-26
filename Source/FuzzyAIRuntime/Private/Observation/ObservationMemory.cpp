@@ -23,7 +23,7 @@ void UFuzzyAIObservationMemory::Reset()
 #pragma endregion
 #pragma region Remembered Facts and Expiry
 void UFuzzyAIObservationMemory::Remember(const FFuzzyAIObservationRecord& Record, float Duration, float Tolerance,
-    TArray<FName>& OutChangedKeys)
+    TArray<FGameplayTag>& OutChangedKeys)
 {
     if (!Record.Result.bIsValid)
     {
@@ -64,7 +64,7 @@ void UFuzzyAIObservationMemory::Remember(const FFuzzyAIObservationRecord& Record
     }
 }
 
-void UFuzzyAIObservationMemory::Prune(double Time, TArray<FName>& OutChangedKeys)
+void UFuzzyAIObservationMemory::Prune(double Time, TArray<FGameplayTag>& OutChangedKeys)
 {
     for (int32 Index = Records.Num() - 1; Index >= 0; --Index)
     {
@@ -88,7 +88,7 @@ void UFuzzyAIObservationMemory::Prune(double Time, TArray<FName>& OutChangedKeys
 
 #pragma endregion
 #pragma region Remembered Fact Reads
-bool UFuzzyAIObservationMemory::TryGetObservation(FName Key, AActor* Target, double Time,
+bool UFuzzyAIObservationMemory::TryGetObservation(FGameplayTag Key, AActor* Target, double Time,
     FFuzzyAIRememberedObservation& OutRecord) const
 {
     OutRecord = FFuzzyAIRememberedObservation();

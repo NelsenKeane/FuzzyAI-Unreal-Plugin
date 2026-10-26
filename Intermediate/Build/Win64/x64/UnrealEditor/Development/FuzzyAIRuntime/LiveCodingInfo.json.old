@@ -1,32 +1,47 @@
 {
 	"RemapUnityFiles": 
 	{
-		"Module.FuzzyAIRuntime.cpp.obj": [
+		"Module.FuzzyAIRuntime.1.cpp.obj": [
+			"FuzzyAIAction.gen.cpp.obj",
 			"FuzzyAIComponent.gen.cpp.obj",
+			"FuzzyAIConsideration.gen.cpp.obj",
+			"FuzzyAIDecisionProfile.gen.cpp.obj",
+			"FuzzyAIDecisionRuntime.gen.cpp.obj",
+			"FuzzyAIInterpretation.gen.cpp.obj",
 			"FuzzyAIRuntime.init.gen.cpp.obj",
+			"FuzzyAIStandardActions.gen.cpp.obj"
+		],
+		"Module.FuzzyAIRuntime.2.cpp.obj": [
+			"FuzzyAITypes.gen.cpp.obj",
+			"FuzzyAIUtilityLibrary.gen.cpp.obj",
+			"FuzzyAttributeObservation.gen.cpp.obj",
 			"FuzzyObservation.gen.cpp.obj",
 			"FuzzyObservationManager.gen.cpp.obj",
 			"FuzzyObservationStore.gen.cpp.obj",
 			"FuzzyStandardObservations.gen.cpp.obj",
-			"ObservationAsset.gen.cpp.obj",
 			"ObservationMemory.gen.cpp.obj",
-			"ObservationResultLibrary.gen.cpp.obj",
-			"ObservationRuntime.gen.cpp.obj",
 			"ObservationRuntimeTypes.gen.cpp.obj",
-			"ObservationTypes.gen.cpp.obj",
-			"StandardObservations.gen.cpp.obj",
+			"ObservationTypes.gen.cpp.obj"
+		],
+		"Module.FuzzyAIRuntime.3.cpp.obj": [
 			"PerModuleInline.gen.cpp.obj",
 			"FuzzyAIComponent.cpp.obj",
 			"FuzzyAIRuntime.cpp.obj",
 			"FuzzyObservation.cpp.obj",
 			"FuzzyObservationManager.cpp.obj",
 			"FuzzyObservationStore.cpp.obj",
-			"ObservationAsset.cpp.obj",
+			"ObservationKeys.cpp.obj",
 			"ObservationMemory.cpp.obj",
-			"ObservationResultLibrary.cpp.obj",
-			"ObservationRuntime.cpp.obj",
+			"ObservationTypes.cpp.obj",
+			"FuzzyAttributeObservation.cpp.obj",
 			"FuzzyStandardObservations.cpp.obj",
-			"StandardObservations.cpp.obj"
+			"FuzzyAIAction.cpp.obj",
+			"FuzzyAIConsideration.cpp.obj",
+			"FuzzyAIDecisionRuntime.cpp.obj",
+			"FuzzyAIInterpretation.cpp.obj",
+			"FuzzyAIStandardActions.cpp.obj",
+			"FuzzyAITypes.cpp.obj",
+			"FuzzyAIUtilityLibrary.cpp.obj"
 		]
 	}
 }

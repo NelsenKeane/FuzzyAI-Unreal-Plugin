@@ -15,12 +15,18 @@
             "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationtypes.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationruntimetypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaitypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaidebugtypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaidebugtypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaitypes.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaicomponent.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\fuzzyobservation.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservation.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\fuzzyobservationstore.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservationstore.generated.h",
-            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\engine\\public\\engineutils.h"
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\engine\\public\\engineutils.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaiaction.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaiaction.generated.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

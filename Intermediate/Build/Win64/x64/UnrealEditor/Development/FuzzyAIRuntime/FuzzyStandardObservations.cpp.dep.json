@@ -18,7 +18,11 @@
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservation.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzystandardobservations.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\fuzzyobservationstore.h",
-            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservationstore.generated.h"
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyobservationstore.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\observationkeys.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\gameplaytags\\public\\nativegameplaytags.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagsmanager.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagsmanager.generated.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

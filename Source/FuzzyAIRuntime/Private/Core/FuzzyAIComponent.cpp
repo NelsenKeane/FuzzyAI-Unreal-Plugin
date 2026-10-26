@@ -3,6 +3,7 @@
 
 #include "FuzzyAIComponent.h"
 #include "Observation/ObservationMemory.h"
+#include "Observation/ObservationKeys.h"
 #include "Observation/FuzzyObservation.h"
 #include "Observation/FuzzyObservationManager.h"
 #include "Observation/FuzzyObservationStore.h"
@@ -10,6 +11,8 @@
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
 #include "UObject/StrongObjectPtr.h"
+#include "Utility/FuzzyAIDecisionRuntime.h"
+#include "Utility/FuzzyAIAction.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFuzzyAIRuntime, Log, All);
 
@@ -87,6 +90,13 @@ bool UFuzzyAIComponent::StartAI()
         return false;
     }
     MemoryRuntime->Initialize(MaxRememberedObservations, MaxObservedEvents, ObservedEventMaxAge);
+    if (!DecisionRuntime) DecisionRuntime = NewObject<UFuzzyAIDecisionRuntime>(this);
+    if (!DecisionRuntime->Initialize(this, ConfigurationErrors))
+    {
+        for (const FString& Error : ConfigurationErrors)
+            UE_LOG(LogFuzzyAIRuntime, Error, TEXT("%s: %s"), *GetNameSafe(GetOwner()), *Error);
+        return false;
+    }
     ObservationStore->Reset();
     bRunning = true;
     {
@@ -97,6 +107,11 @@ bool UFuzzyAIComponent::StartAI()
         ObservationManager->GetSchedulerInterval(), true);
     SetComponentTickEnabled(ObservationManager->NeedsEveryFrame());
     RefreshAllObservations();
+    if (bEnableDecisions)
+    {
+        GetWorld()->GetTimerManager().SetTimer(DecisionHandle, this, &UFuzzyAIComponent::EvaluateDecisions, DecisionInterval, true);
+        EvaluateDecisions();
+    }
     return true;
 }
 
@@ -108,6 +123,11 @@ void UFuzzyAIComponent::StopAI()
         return;
     }
     bRunning = false;
+    if (DecisionRuntime)
+    {
+        TGuardValue<bool> ProcessingGuard(bProcessing, true);
+        DecisionRuntime->Stop();
+    }
     if (ObservationManager)
     {
         TGuardValue<bool> ProcessingGuard(bProcessing, true);
@@ -117,6 +137,7 @@ void UFuzzyAIComponent::StopAI()
     if (GetWorld())
     {
         GetWorld()->GetTimerManager().ClearTimer(SchedulerHandle);
+        GetWorld()->GetTimerManager().ClearTimer(DecisionHandle);
         GetWorld()->GetTimerManager().ClearTimer(DeferredHandle);
     }
     DeferredActions.Reset();
@@ -124,6 +145,52 @@ void UFuzzyAIComponent::StopAI()
 
 #pragma endregion
 #pragma region Deferred Actions
+void UFuzzyAIComponent::EvaluateDecisions()
+{
+    if (!bRunning || bEndingPlay || !bEnableDecisions || !DecisionRuntime) return;
+    if (bProcessing)
+    {
+        Defer([this]() { EvaluateDecisions(); });
+        return;
+    }
+    TGuardValue<bool> Guard(bProcessing, true);
+    DecisionRuntime->Update();
+}
+
+bool UFuzzyAIComponent::GetInterpretation(FName Id, float& Value) const
+{
+    Value = 0.f;
+    return DecisionRuntime && DecisionRuntime->ReadInterpretation(Id, Value);
+}
+
+FFuzzyAIDecisionDebugSnapshot UFuzzyAIComponent::GetDecisionDebugSnapshot() const
+{
+    return DecisionRuntime ? DecisionRuntime->GetDebugSnapshot() : FFuzzyAIDecisionDebugSnapshot();
+}
+void UFuzzyAIComponent::RecordDecisionDebug(FFuzzyAIDebugEntry Entry) const
+{
+    if (DecisionRuntime) DecisionRuntime->RecordDebug(MoveTemp(Entry));
+}
+bool UFuzzyAIComponent::IsCapturingDecisionDebug() const
+{
+    return DecisionRuntime && DecisionRuntime->IsCapturing();
+}
+TArray<FFuzzyAIInterpretationValue> UFuzzyAIComponent::GetInterpretationSnapshot() const
+{
+    return DecisionRuntime ? DecisionRuntime->GetInterpretations() : TArray<FFuzzyAIInterpretationValue>();
+}
+TArray<FFuzzyAIActionScore> UFuzzyAIComponent::GetActionScores() const
+{
+    return DecisionRuntime ? DecisionRuntime->GetScores() : TArray<FFuzzyAIActionScore>();
+}
+UFuzzyAIAction* UFuzzyAIComponent::GetActiveAction() const { return DecisionRuntime ? DecisionRuntime->GetActive() : nullptr; }
+TArray<UFuzzyAIAction*> UFuzzyAIComponent::GetRuntimeActions() const
+{
+    TArray<UFuzzyAIAction*> Result;
+    if (DecisionRuntime) for (UFuzzyAIAction* Action : DecisionRuntime->GetActions()) Result.Add(Action);
+    return Result;
+}
+
 void UFuzzyAIComponent::Defer(TFunction<void()>&& Action)
 {
     if (!bEndingPlay && GetWorld())
@@ -166,7 +233,7 @@ FFuzzyAIObservationContext UFuzzyAIComponent::MakeContext() const
 
 #pragma endregion
 #pragma region Sampling and Refresh Requests
-void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& Keys)
+void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& SensorNames)
 {
     if (!bRunning || bEndingPlay)
     {
@@ -174,19 +241,19 @@ void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& Keys)
     }
     if (bProcessing)
     {
-        Defer([this, Keys]() { ProcessRefresh(Keys); });
+        Defer([this, SensorNames]() { ProcessRefresh(SensorNames); });
         return;
     }
     TGuardValue<bool> ProcessingGuard(bProcessing, true);
     const double Time = Now();
-    TArray<FName> MemoryChanged;
+    TArray<FGameplayTag> MemoryChanged;
     MemoryRuntime->Prune(Time, MemoryChanged);
-    TArray<FName> Sampled;
+    TArray<FGameplayTag> Sampled;
     const FFuzzyAIObservationContext Context = MakeContext();
     ObservationStore->BeginBatch(Time);
-    ObservationManager->Sample(Keys, ObservationStore, Context, ContextRevision, Time);
+    ObservationManager->Sample(SensorNames, ObservationStore, Context, ContextRevision, Time);
     const TArray<FFuzzyAIObservationChange> Changes = ObservationStore->Commit(Sampled);
-    for (FName Key : Sampled)
+    for (FGameplayTag Key : Sampled)
     {
         const FFuzzyAIObservationSettings* Settings = ObservationStore->FindSettings(Key);
         FFuzzyAIObservationRecord Record;
@@ -195,7 +262,7 @@ void UFuzzyAIComponent::ProcessRefresh(const TArray<FName>& Keys)
             MemoryRuntime->Remember(Record, Settings->MemoryDuration, Settings->ChangeTolerance, MemoryChanged);
         }
     }
-    TArray<FName> ChangedKeys;
+    TArray<FGameplayTag> ChangedKeys;
     for (const FFuzzyAIObservationChange& Change : Changes)
     {
         ChangedKeys.Add(Change.Current.Key);
@@ -219,26 +286,26 @@ void UFuzzyAIComponent::RefreshAllObservations()
 {
     if (bRunning)
     {
-        ProcessRefresh(GetRefreshKeys());
+        ProcessRefresh(GetRefreshSensorNames());
     }
 }
 
-bool UFuzzyAIComponent::RequestObservationRefresh(FName Key)
+bool UFuzzyAIComponent::RequestObservationRefresh(FGameplayTag Key)
 {
     if (!bRunning)
     {
         return false;
     }
-    if (UFuzzyObservation* Instance = ObservationManager->FindObservation(Key, ObservationStore))
+    if (UFuzzyObservation* Instance = ObservationManager->FindObservation(Key))
     {
         return RequestObservationInstanceRefresh(Instance);
     }
     return false;
 }
 
-bool UFuzzyAIComponent::NotifyObservationSourceChanged(FName Key)
+bool UFuzzyAIComponent::NotifyObservationSourceChanged(FGameplayTag Key)
 {
-    UFuzzyObservation* Instance = bRunning ? ObservationManager->FindObservation(Key, ObservationStore) : nullptr;
+    UFuzzyObservation* Instance = bRunning ? ObservationManager->FindObservation(Key) : nullptr;
     return Instance && Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::SourceEvent && RequestObservationInstanceRefresh(Instance);
 }
 
@@ -248,7 +315,7 @@ bool UFuzzyAIComponent::RequestObservationInstanceRefresh(UFuzzyObservation* Obs
     {
         return false;
     }
-    ProcessRefresh({Observation->GetId()});
+    ProcessRefresh({Observation->GetFName()});
     return true;
 }
 
@@ -267,16 +334,16 @@ TArray<UFuzzyObservation*> UFuzzyAIComponent::GetRuntimeObservationInstances() c
     return Instances;
 }
 
-TArray<FName> UFuzzyAIComponent::GetRefreshKeys(bool bContextOnly) const
+TArray<FName> UFuzzyAIComponent::GetRefreshSensorNames(bool bContextOnly) const
 {
-    return bContextOnly ? ObservationManager->GetContextDependentIds() : ObservationManager->GetIds();
+    return bContextOnly ? ObservationManager->GetContextDependentSensorNames() : ObservationManager->GetSensorNames();
 }
 
 void UFuzzyAIComponent::SchedulerUpdate()
 {
     if (bRunning)
     {
-        ProcessRefresh(ObservationManager->GetDueIds(Now(), false));
+        ProcessRefresh(ObservationManager->GetDueSensorNames(Now(), false));
     }
 }
 
@@ -285,7 +352,7 @@ void UFuzzyAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     if (bRunning)
     {
-        ProcessRefresh(ObservationManager->GetDueIds(Now(), true));
+        ProcessRefresh(ObservationManager->GetDueSensorNames(Now(), true));
     }
 }
 
@@ -327,7 +394,7 @@ void UFuzzyAIComponent::ApplyTarget(AActor* NewTarget, bool bVisible)
     bTargetVisible = bVisible;
     if (bRunning && (bNewIdentity || bVisibilityChanged || bVisible))
     {
-        ProcessRefresh(GetRefreshKeys(true));
+        ProcessRefresh(GetRefreshSensorNames(true));
     }
 }
 
@@ -393,14 +460,14 @@ void UFuzzyAIComponent::SetObservationSubjects(const TArray<AActor*>& Subjects)
         ++ContextRevision;
         if (bRunning)
         {
-            ProcessRefresh(GetRefreshKeys(true));
+            ProcessRefresh(GetRefreshSensorNames(true));
         }
     }
 }
 
 #pragma endregion
 #pragma region Current Observation Reads
-bool UFuzzyAIComponent::TryGetObservation(FName Key, FFuzzyAIObservationRecord& OutRecord) const
+bool UFuzzyAIComponent::TryGetObservation(FGameplayTag Key, FFuzzyAIObservationRecord& OutRecord) const
 {
     OutRecord = FFuzzyAIObservationRecord();
     return ObservationStore && ObservationStore->TryGetObservation(Key, OutRecord);
@@ -413,7 +480,7 @@ TArray<FFuzzyAIObservationRecord> UFuzzyAIComponent::GetObservationSnapshot() co
 
 #pragma endregion
 #pragma region Remembered Knowledge
-bool UFuzzyAIComponent::TryGetRememberedObservation(FName Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const
+bool UFuzzyAIComponent::TryGetRememberedObservation(FGameplayTag Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const
 {
     OutRecord = FFuzzyAIRememberedObservation();
     return MemoryRuntime && MemoryRuntime->TryGetObservation(Key, ForTarget, Now(), OutRecord);
@@ -424,8 +491,12 @@ TArray<FFuzzyAIRememberedObservation> UFuzzyAIComponent::GetMemorySnapshot() con
     return MemoryRuntime ? MemoryRuntime->GetSnapshot(Now()) : TArray<FFuzzyAIRememberedObservation>();
 }
 
-FFuzzyAITargetLocationKnowledge UFuzzyAIComponent::GetTargetLocationKnowledge(FName LocationKey) const
+FFuzzyAITargetLocationKnowledge UFuzzyAIComponent::GetTargetLocationKnowledge(FGameplayTag LocationKey) const
 {
+    if (!LocationKey.IsValid())
+    {
+        LocationKey = NKFuzzyAI::ObservationKeys::TargetVisibleLocation;
+    }
     FFuzzyAITargetLocationKnowledge Knowledge;
     Knowledge.Target = CurrentTarget;
     FFuzzyAIObservationRecord Active;
@@ -472,7 +543,7 @@ bool UFuzzyAIComponent::RecordEventAtTime(const FFuzzyAIObservedEvent& Event, do
         return false;
     }
     TGuardValue<bool> ProcessingGuard(bProcessing, true);
-    TArray<FName> Expired;
+    TArray<FGameplayTag> Expired;
     MemoryRuntime->Prune(Now(), Expired);
     const FFuzzyAIObservedEvent Stored = MemoryRuntime->RecordEvent(Event, ReceiptTime);
     if (!Expired.IsEmpty())
@@ -499,7 +570,7 @@ void UFuzzyAIComponent::ClearMemory()
     }
     if (MemoryRuntime)
     {
-        TArray<FName> Keys;
+        TArray<FGameplayTag> Keys;
         for (const FFuzzyAIRememberedObservation& Record : MemoryRuntime->GetSnapshot(Now()))
         {
             Keys.AddUnique(Record.Observation.Key);

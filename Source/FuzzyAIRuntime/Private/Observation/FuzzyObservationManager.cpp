@@ -3,6 +3,7 @@
 
 #include "Observation/FuzzyObservationManager.h"
 #include "Observation/FuzzyObservationStore.h"
+#include "Observation/ObservationKeys.h"
 #include "FuzzyAIComponent.h"
 #include "GameFramework/Actor.h"
 
@@ -14,8 +15,7 @@ bool UFuzzyObservationManager::Initialize(const TArray<TObjectPtr<UFuzzyObservat
     Instances.Reset();
     NextUpdateTimes.Reset();
     OutErrors.Reset();
-    TSet<FName> Ids;
-    TSet<FName> Outputs;
+    TSet<FGameplayTag> ClaimedKeys;
     for (UFuzzyObservation* Template : Templates)
     {
         if (!IsValid(Template))
@@ -27,32 +27,42 @@ bool UFuzzyObservationManager::Initialize(const TArray<TObjectPtr<UFuzzyObservat
         {
             continue;
         }
-        if (Template->GetClass()->HasAnyClassFlags(CLASS_Abstract) || Ids.Contains(Template->GetId()) ||
-            (!Template->ObservationKey.IsNone() && Outputs.Contains(Template->ObservationKey)))
+        if (Template->GetClass()->HasAnyClassFlags(CLASS_Abstract) || Template->Outputs.IsEmpty())
         {
-            OutErrors.Add(FString::Printf(TEXT("Abstract observation or duplicate observation ID/output: %s"), *Template->GetId().ToString()));
+            OutErrors.Add(FString::Printf(TEXT("%s: observation must be concrete and declare at least one output."), *Template->GetName()));
             continue;
         }
         if (!FMath::IsFinite(Template->Interval) || Template->Interval < 0.01f ||
-            !FMath::IsFinite(Template->ChangeTolerance) || Template->ChangeTolerance < 0.f ||
-            !FMath::IsFinite(Template->MemoryDuration) || Template->MemoryDuration < 0.f)
+            !StaticEnum<EFuzzyAIObservationUpdatePolicy>()->IsValidEnumValue(static_cast<int64>(Template->UpdatePolicy)) ||
+            !StaticEnum<EFuzzyAIObservationSubject>()->IsValidEnumValue(static_cast<int64>(Template->Subject)))
         {
-            OutErrors.Add(FString::Printf(TEXT("Invalid observation timing/tolerance: %s"), *Template->GetId().ToString()));
+            OutErrors.Add(FString::Printf(TEXT("%s: invalid observation interval, update policy or subject."), *Template->GetName()));
             continue;
+        }
+        for (const FFuzzyAIObservationOutput& Output : Template->Outputs)
+        {
+            if (!Output.Key.IsValid() || !Output.Key.MatchesTag(NKFuzzyAI::ObservationKeys::Root) ||
+                Output.Key == NKFuzzyAI::ObservationKeys::Root)
+            {
+                OutErrors.Add(FString::Printf(TEXT("%s: select a registered key under Observation.*."), *Template->GetName()));
+            }
+            else if (ClaimedKeys.Contains(Output.Key))
+            {
+                OutErrors.Add(FString::Printf(TEXT("Duplicate observation output key: %s. Each key needs one owner."), *Output.Key.ToString()));
+            }
+            ClaimedKeys.Add(Output.Key);
+            if (!FMath::IsFinite(Output.ChangeTolerance) || Output.ChangeTolerance < 0.f ||
+                !FMath::IsFinite(Output.MemoryDuration) || Output.MemoryDuration < 0.f ||
+                !StaticEnum<EFuzzyAIObservationValueType>()->IsValidEnumValue(static_cast<int64>(Output.ValueType)))
+            {
+                OutErrors.Add(FString::Printf(TEXT("%s: invalid type, tolerance or memory duration for %s."),
+                    *Template->GetName(), *Output.Key.ToString()));
+            }
         }
         const FName RuntimeName = MakeUniqueObjectName(Owner, Template->GetClass(), FName(*FString::Printf(TEXT("%s_Runtime"), *Template->GetName())));
         UFuzzyObservation* Instance = DuplicateObject<UFuzzyObservation>(Template, Owner, RuntimeName);
-        if (Template->ObservationId.IsNone() && Template->ObservationKey.IsNone())
-        {
-            Instance->ObservationId = Template->GetId();
-        }
-        Ids.Add(Instance->GetId());
-        if (!Instance->ObservationKey.IsNone())
-        {
-            Outputs.Add(Instance->ObservationKey);
-        }
         Instances.Add(Instance);
-        NextUpdateTimes.Add(Instance->GetId(), 0.);
+        NextUpdateTimes.Add(Instance->GetFName(), 0.);
     }
     if (!OutErrors.IsEmpty())
     {
@@ -81,41 +91,41 @@ void UFuzzyObservationManager::Shutdown()
 
 #pragma endregion
 #pragma region Scheduling
-TArray<FName> UFuzzyObservationManager::GetIds() const
+TArray<FName> UFuzzyObservationManager::GetSensorNames() const
 {
-    TArray<FName> Ids;
+    TArray<FName> SensorNames;
     for (UFuzzyObservation* Instance : Instances)
     {
-        Ids.Add(Instance->GetId());
+        SensorNames.Add(Instance->GetFName());
     }
-    return Ids;
+    return SensorNames;
 }
 
-TArray<FName> UFuzzyObservationManager::GetDueIds(double Time, bool bEveryFrame) const
+TArray<FName> UFuzzyObservationManager::GetDueSensorNames(double Time, bool bEveryFrame) const
 {
-    TArray<FName> Ids;
+    TArray<FName> SensorNames;
     for (UFuzzyObservation* Instance : Instances)
     {
         if ((bEveryFrame && Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::EveryFrame) ||
-            (!bEveryFrame && Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::Interval && Time >= NextUpdateTimes.FindChecked(Instance->GetId())))
+            (!bEveryFrame && Instance->UpdatePolicy == EFuzzyAIObservationUpdatePolicy::Interval && Time >= NextUpdateTimes.FindChecked(Instance->GetFName())))
         {
-            Ids.Add(Instance->GetId());
+            SensorNames.Add(Instance->GetFName());
         }
     }
-    return Ids;
+    return SensorNames;
 }
 
-TArray<FName> UFuzzyObservationManager::GetContextDependentIds() const
+TArray<FName> UFuzzyObservationManager::GetContextDependentSensorNames() const
 {
-    TArray<FName> Ids;
+    TArray<FName> SensorNames;
     for (UFuzzyObservation* Instance : Instances)
     {
         if (Instance->IsTargetDependent())
         {
-            Ids.Add(Instance->GetId());
+            SensorNames.Add(Instance->GetFName());
         }
     }
-    return Ids;
+    return SensorNames;
 }
 
 float UFuzzyObservationManager::GetSchedulerInterval() const
@@ -138,11 +148,11 @@ bool UFuzzyObservationManager::NeedsEveryFrame() const
 
 #pragma endregion
 #pragma region Sensor Lookup
-UFuzzyObservation* UFuzzyObservationManager::FindObservation(FName IdOrKey, const UFuzzyObservationStore* Store) const
+UFuzzyObservation* UFuzzyObservationManager::FindObservation(FGameplayTag Key) const
 {
     for (UFuzzyObservation* Instance : Instances)
     {
-        if (Instance->GetId() == IdOrKey || Instance->ObservationKey == IdOrKey || (Store && Store->FindWriter(IdOrKey) == Instance))
+        if (Instance->Outputs.ContainsByPredicate([Key](const FFuzzyAIObservationOutput& Output) { return Output.Key == Key; }))
         {
             return Instance;
         }
@@ -157,17 +167,17 @@ bool UFuzzyObservationManager::Contains(const UFuzzyObservation* Observation) co
 
 #pragma endregion
 #pragma region Sampling
-void UFuzzyObservationManager::Sample(const TArray<FName>& Ids, UFuzzyObservationStore* Store,
+void UFuzzyObservationManager::Sample(const TArray<FName>& SensorNames, UFuzzyObservationStore* Store,
     const FFuzzyAIObservationContext& Context, int32 Revision, double Time)
 {
     for (UFuzzyObservation* Instance : Instances)
     {
         Instance->UpdateContext(Context);
-        if (!Ids.Contains(Instance->GetId()))
+        if (!SensorNames.Contains(Instance->GetFName()))
         {
             continue;
         }
-        Store->BeginSample(Instance, Instance->ObservationKey, Instance->ExpectedValueType, Instance->GetSettings(),
+        Store->BeginSample(Instance, Instance->Outputs,
             Instance->IsTargetDependent(), Context, Revision);
         AActor* Subject = Instance->Subject == EFuzzyAIObservationSubject::Self ? Context.Observer.Get() : Context.Target.Get();
         if (Instance->bRequiresVisibleTarget && (!Context.bTargetVisible || !IsValid(Context.Target)))
@@ -183,7 +193,7 @@ void UFuzzyObservationManager::Sample(const TArray<FName>& Ids, UFuzzyObservatio
             Instance->Sample(Context.Observer.Get(), Context.Target.Get(), Store);
         }
         Store->EndSample();
-        NextUpdateTimes.Add(Instance->GetId(), Time + Instance->Interval);
+        NextUpdateTimes.Add(Instance->GetFName(), Time + Instance->Interval);
     }
 }
 #pragma endregion

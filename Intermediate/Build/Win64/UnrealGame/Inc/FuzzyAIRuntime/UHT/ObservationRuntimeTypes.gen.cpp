@@ -6,6 +6,7 @@
 
 #include "UObject/GeneratedCppIncludes.h"
 #include "Observation/ObservationRuntimeTypes.h"
+#include "GameplayTagContainer.h"
 #include "Observation/ObservationTypes.h"
 
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
@@ -16,12 +17,15 @@ void EmptyLinkFunctionForGeneratedCodeObservationRuntimeTypes() {}
 COREUOBJECT_API UScriptStruct* Z_Construct_UScriptStruct_FVector();
 ENGINE_API UClass* Z_Construct_UClass_AActor_NoRegister();
 FUZZYAIRUNTIME_API UEnum* Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationUpdatePolicy();
+FUZZYAIRUNTIME_API UEnum* Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationValueType();
+FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationOutput();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationRecord();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationResult();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationSettings();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservedEvent();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation();
 FUZZYAIRUNTIME_API UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAITargetLocationKnowledge();
+GAMEPLAYTAGS_API UScriptStruct* Z_Construct_UScriptStruct_FGameplayTag();
 UPackage* Z_Construct_UPackage__Script_FuzzyAIRuntime();
 // ********** End Cross Module References **********************************************************
 
@@ -175,6 +179,90 @@ UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationSettings()
 }
 // ********** End ScriptStruct FFuzzyAIObservationSettings *****************************************
 
+// ********** Begin ScriptStruct FFuzzyAIObservationOutput *****************************************
+struct Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics
+{
+	static inline consteval int32 GetStructSize() { return sizeof(FFuzzyAIObservationOutput); }
+	static inline consteval int16 GetStructAlignment() { return alignof(FFuzzyAIObservationOutput); }
+#if WITH_METADATA
+	static constexpr UECodeGen_Private::FMetaDataPairParam Struct_MetaDataParams[] = {
+		{ "BlueprintType", "true" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** One declared value produced by a sensor. Keys are exact lookups, not hierarchical queries. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "One declared value produced by a sensor. Keys are exact lookups, not hierarchical queries." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_Key_MetaData[] = {
+		{ "Categories", "Observation" },
+		{ "Category", "Observation" },
+		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ValueType_MetaData[] = {
+		{ "Category", "Observation" },
+		{ "ModuleRelativePath", "Public/Observation/ObservationRuntimeTypes.h" },
+	};
+#endif // WITH_METADATA
+
+// ********** Begin ScriptStruct FFuzzyAIObservationOutput constinit property declarations *********
+	static const UECodeGen_Private::FStructPropertyParams NewProp_Key;
+	static const UECodeGen_Private::FBytePropertyParams NewProp_ValueType_Underlying;
+	static const UECodeGen_Private::FEnumPropertyParams NewProp_ValueType;
+	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
+// ********** End ScriptStruct FFuzzyAIObservationOutput constinit property declarations ***********
+	static void* NewStructOps()
+	{
+		return (UScriptStruct::ICppStructOps*)new UScriptStruct::TCppStructOps<FFuzzyAIObservationOutput>();
+	}
+	static const UECodeGen_Private::FStructParams StructParams;
+}; // struct Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics
+static_assert(std::is_polymorphic<FFuzzyAIObservationOutput>() == std::is_polymorphic<FFuzzyAIObservationSettings>(), "USTRUCT FFuzzyAIObservationOutput cannot be polymorphic unless super FFuzzyAIObservationSettings is polymorphic");
+static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput;
+class UScriptStruct* FFuzzyAIObservationOutput::StaticStruct()
+{
+	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.OuterSingleton)
+	{
+		Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.OuterSingleton = GetStaticStruct(Z_Construct_UScriptStruct_FFuzzyAIObservationOutput, (UObject*)Z_Construct_UPackage__Script_FuzzyAIRuntime(), TEXT("FuzzyAIObservationOutput"));
+	}
+	return Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.OuterSingleton;
+	}
+
+// ********** Begin ScriptStruct FFuzzyAIObservationOutput Property Definitions ********************
+const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_Key = { "Key", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationOutput, Key), Z_Construct_UScriptStruct_FGameplayTag, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Key_MetaData), NewProp_Key_MetaData) }; // 517357616
+const UECodeGen_Private::FBytePropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_ValueType_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
+const UECodeGen_Private::FEnumPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_ValueType = { "ValueType", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationOutput, ValueType), Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAIObservationValueType, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ValueType_MetaData), NewProp_ValueType_MetaData) }; // 1928944902
+const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::PropPointers[] = {
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_Key,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_ValueType_Underlying,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewProp_ValueType,
+};
+static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::PropPointers) < 2048);
+// ********** End ScriptStruct FFuzzyAIObservationOutput Property Definitions **********************
+const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::StructParams = {
+	(UObject* (*)())Z_Construct_UPackage__Script_FuzzyAIRuntime,
+	Z_Construct_UScriptStruct_FFuzzyAIObservationSettings,
+	&NewStructOps,
+	"FuzzyAIObservationOutput",
+	Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::PropPointers,
+	UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::PropPointers),
+	sizeof(FFuzzyAIObservationOutput),
+	alignof(FFuzzyAIObservationOutput),
+	RF_Public|RF_Transient|RF_MarkAsNative,
+	EStructFlags(0x00000201),
+	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::Struct_MetaDataParams), Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::Struct_MetaDataParams)
+};
+UScriptStruct* Z_Construct_UScriptStruct_FFuzzyAIObservationOutput()
+{
+	if (!Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.InnerSingleton)
+	{
+		UECodeGen_Private::ConstructUScriptStruct(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.InnerSingleton, Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::StructParams);
+	}
+	return CastChecked<UScriptStruct>(Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput.InnerSingleton);
+}
+// ********** End ScriptStruct FFuzzyAIObservationOutput *******************************************
+
 // ********** Begin ScriptStruct FFuzzyAIObservationRecord *****************************************
 struct Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics
 {
@@ -224,7 +312,7 @@ struct Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics
 #endif // WITH_METADATA
 
 // ********** Begin ScriptStruct FFuzzyAIObservationRecord constinit property declarations *********
-	static const UECodeGen_Private::FNamePropertyParams NewProp_Key;
+	static const UECodeGen_Private::FStructPropertyParams NewProp_Key;
 	static const UECodeGen_Private::FStructPropertyParams NewProp_Result;
 	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_Observer;
 	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_Target;
@@ -253,7 +341,7 @@ class UScriptStruct* FFuzzyAIObservationRecord::StaticStruct()
 	}
 
 // ********** Begin ScriptStruct FFuzzyAIObservationRecord Property Definitions ********************
-const UECodeGen_Private::FNamePropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewProp_Key = { "Key", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Name, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationRecord, Key), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Key_MetaData), NewProp_Key_MetaData) };
+const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewProp_Key = { "Key", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationRecord, Key), Z_Construct_UScriptStruct_FGameplayTag, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Key_MetaData), NewProp_Key_MetaData) }; // 517357616
 const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewProp_Result = { "Result", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationRecord, Result), Z_Construct_UScriptStruct_FFuzzyAIObservationResult, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Result_MetaData), NewProp_Result_MetaData) }; // 1088075548
 const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewProp_Observer = { "Observer", nullptr, (EPropertyFlags)0x0014000000000014, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationRecord, Observer), Z_Construct_UClass_AActor_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Observer_MetaData), NewProp_Observer_MetaData) };
 const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewProp_Target = { "Target", nullptr, (EPropertyFlags)0x0014000000000014, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIObservationRecord, Target), Z_Construct_UClass_AActor_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Target_MetaData), NewProp_Target_MetaData) };
@@ -350,7 +438,7 @@ class UScriptStruct* FFuzzyAIRememberedObservation::StaticStruct()
 	}
 
 // ********** Begin ScriptStruct FFuzzyAIRememberedObservation Property Definitions ****************
-const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewProp_Observation = { "Observation", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIRememberedObservation, Observation), Z_Construct_UScriptStruct_FFuzzyAIObservationRecord, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Observation_MetaData), NewProp_Observation_MetaData) }; // 3864767520
+const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewProp_Observation = { "Observation", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIRememberedObservation, Observation), Z_Construct_UScriptStruct_FFuzzyAIObservationRecord, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Observation_MetaData), NewProp_Observation_MetaData) }; // 1057222834
 const UECodeGen_Private::FDoublePropertyParams Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewProp_ExpiresAt = { "ExpiresAt", nullptr, (EPropertyFlags)0x0010000000000014, UECodeGen_Private::EPropertyGenFlags::Double, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FFuzzyAIRememberedObservation, ExpiresAt), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ExpiresAt_MetaData), NewProp_ExpiresAt_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewProp_Observation,
@@ -607,13 +695,14 @@ struct Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_Fuzz
 	};
 	static constexpr FStructRegisterCompiledInInfo ScriptStructInfo[] = {
 		{ FFuzzyAIObservationSettings::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationSettings_Statics::NewStructOps, TEXT("FuzzyAIObservationSettings"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationSettings, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationSettings), 812094478U) },
-		{ FFuzzyAIObservationRecord::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewStructOps, TEXT("FuzzyAIObservationRecord"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationRecord, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationRecord), 3864767520U) },
-		{ FFuzzyAIRememberedObservation::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewStructOps, TEXT("FuzzyAIRememberedObservation"),&Z_Registration_Info_UScriptStruct_FFuzzyAIRememberedObservation, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIRememberedObservation), 1723553164U) },
+		{ FFuzzyAIObservationOutput::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationOutput_Statics::NewStructOps, TEXT("FuzzyAIObservationOutput"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationOutput, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationOutput), 2597823240U) },
+		{ FFuzzyAIObservationRecord::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservationRecord_Statics::NewStructOps, TEXT("FuzzyAIObservationRecord"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservationRecord, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservationRecord), 1057222834U) },
+		{ FFuzzyAIRememberedObservation::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIRememberedObservation_Statics::NewStructOps, TEXT("FuzzyAIRememberedObservation"),&Z_Registration_Info_UScriptStruct_FFuzzyAIRememberedObservation, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIRememberedObservation), 4292911335U) },
 		{ FFuzzyAIObservedEvent::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAIObservedEvent_Statics::NewStructOps, TEXT("FuzzyAIObservedEvent"),&Z_Registration_Info_UScriptStruct_FFuzzyAIObservedEvent, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAIObservedEvent), 207617125U) },
 		{ FFuzzyAITargetLocationKnowledge::StaticStruct, Z_Construct_UScriptStruct_FFuzzyAITargetLocationKnowledge_Statics::NewStructOps, TEXT("FuzzyAITargetLocationKnowledge"),&Z_Registration_Info_UScriptStruct_FFuzzyAITargetLocationKnowledge, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FFuzzyAITargetLocationKnowledge), 4179603342U) },
 	};
 }; // Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics 
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_2310674015{
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_2444298003{
 	TEXT("/Script/FuzzyAIRuntime"),
 	nullptr, 0,
 	Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Observation_ObservationRuntimeTypes_h__Script_FuzzyAIRuntime_Statics::ScriptStructInfo),

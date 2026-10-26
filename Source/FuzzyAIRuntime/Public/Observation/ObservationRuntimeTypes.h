@@ -35,6 +35,19 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationSettings
     float MemoryDuration = 10.f;
 };
 
+/** One declared value produced by a sensor. Keys are exact lookups, not hierarchical queries. */
+USTRUCT(BlueprintType)
+struct FUZZYAIRUNTIME_API FFuzzyAIObservationOutput : public FFuzzyAIObservationSettings
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (Categories = "Observation"))
+    FGameplayTag Key;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
+    EFuzzyAIObservationValueType ValueType = EFuzzyAIObservationValueType::Float;
+};
+
 #pragma endregion
 #pragma region Current Observation Record
 USTRUCT(BlueprintType)
@@ -43,7 +56,7 @@ struct FUZZYAIRUNTIME_API FFuzzyAIObservationRecord
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadOnly, Category = "Observation")
-    FName Key;
+    FGameplayTag Key;
 
     UPROPERTY(BlueprintReadOnly, Category = "Observation")
     FFuzzyAIObservationResult Result;

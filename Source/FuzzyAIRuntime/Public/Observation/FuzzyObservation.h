@@ -22,16 +22,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     bool bEnabled = true;
 
-    /** Optional scheduling identifier. Falls back to ObservationKey, then the instance name. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    FName ObservationId;
-
-    /** Optional primary output; declared keys are invalidated even before the first successful read. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    FName ObservationKey;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
-    EFuzzyAIObservationValueType ExpectedValueType = EFuzzyAIObservationValueType::Float;
+    /** All keys this sensor may publish. Each output owns its type, tolerance and memory policy. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (TitleProperty = "Key"))
+    TArray<FFuzzyAIObservationOutput> Outputs;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     EFuzzyAIObservationSubject Subject = EFuzzyAIObservationSubject::Self;
@@ -42,22 +35,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (ClampMin = "0.01", EditCondition = "UpdatePolicy == EFuzzyAIObservationUpdatePolicy::Interval"))
     float Interval = 0.2f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation", meta = (ClampMin = "0"))
-    float ChangeTolerance = 0.01f;
-
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     bool bRequiresVisibleTarget = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Observation")
     bool bUsesTargetContext = false;
-
-    #pragma endregion
-    #pragma region Memory Configuration
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Memory")
-    bool bRememberLastSuccessful = false;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Memory", meta = (ClampMin = "0"))
-    float MemoryDuration = 10.f;
 
     #pragma endregion
     #pragma region Sampling and Component Requests
@@ -78,8 +60,10 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     UFuzzyObservationStore* GetObservationStore() const { return RuntimeStore; }
 
-    FName GetId() const;
-    FFuzzyAIObservationSettings GetSettings() const;
+    /** Reads a configured output key; invalid index returns an empty tag. Native sensors use output zero. */
+    UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation", meta = (Categories = "Observation"))
+    FGameplayTag GetOutputKey(int32 OutputIndex = 0) const;
+
     bool IsTargetDependent() const;
     virtual UWorld* GetWorld() const override;
 

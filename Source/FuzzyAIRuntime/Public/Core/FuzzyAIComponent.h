@@ -7,18 +7,25 @@
 #include "Components/ActorComponent.h"
 #include "Observation/ObservationRuntimeTypes.h"
 #include "TimerManager.h"
+#include "Utility/FuzzyAITypes.h"
 #include "FuzzyAIComponent.generated.h"
 
 class UFuzzyAIObservationMemory;
 class UFuzzyObservation;
 class UFuzzyObservationStore;
 class UFuzzyObservationManager;
+class UFuzzyAIAction;
+class UFuzzyAIInterpretation;
+class UFuzzyAIDecisionProfile;
+class UFuzzyAIDecisionRuntime;
 
 #pragma region Dispatcher Types
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFuzzyAIObservationChanged, FName, Key,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FFuzzyAIObservationChanged, FGameplayTag, Key,
     const FFuzzyAIObservationRecord&, Previous, const FFuzzyAIObservationRecord&, Current, bool, bHadPrevious);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservationsChanged, const TArray<FName>&, ChangedKeys);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservationsChanged, const TArray<FGameplayTag>&, ChangedKeys);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservedEventRecorded, const FFuzzyAIObservedEvent&, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIActionStarted, FGameplayTag, ActionId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFuzzyAIActionFinished, FGameplayTag, ActionId, EFuzzyAIActionResult, Result);
 
 #pragma endregion
 /** Single actor-facing entry point. Internal layers are per-enemy UObjects, not actor components. */
@@ -34,6 +41,41 @@ public:
     /** Inline Blueprint/native sensor templates. Each running enemy receives its own copies. */
     UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Fuzzy AI|Observation", meta = (DisplayName = "Observations"))
     TArray<TObjectPtr<UFuzzyObservation>> ObservationInstances;
+
+    /** Profile definitions are followed by local definitions; IDs must remain unique. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fuzzy AI|Decision")
+    TObjectPtr<UFuzzyAIDecisionProfile> DecisionProfile;
+
+    UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Fuzzy AI|Decision")
+    TArray<TObjectPtr<UFuzzyAIInterpretation>> Interpretations;
+
+    UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Fuzzy AI|Decision")
+    TArray<TObjectPtr<UFuzzyAIAction>> Actions;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fuzzy AI|Decision")
+    bool bEnableDecisions = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fuzzy AI|Decision", meta=(ClampMin="0.01"))
+    float DecisionInterval = 0.1f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fuzzy AI|Decision", meta=(ClampMin="0", ClampMax="1"))
+    float SwitchingMargin = 0.1f;
+
+    /** Captures bounded numeric traces; editor reads never reevaluate decisions. Disabled in Shipping. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fuzzy AI|Debug") bool bCaptureDecisionDebug = true;
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Debug") FFuzzyAIDecisionDebugSnapshot GetDecisionDebugSnapshot() const;
+    void RecordDecisionDebug(FFuzzyAIDebugEntry Entry) const;
+    bool IsCapturingDecisionDebug() const;
+
+    UPROPERTY(BlueprintAssignable, Category="Fuzzy AI|Decision") FFuzzyAIActionStarted OnActionStarted;
+    UPROPERTY(BlueprintAssignable, Category="Fuzzy AI|Decision") FFuzzyAIActionFinished OnActionFinished;
+
+    UFUNCTION(BlueprintCallable, Category="Fuzzy AI|Decision") void EvaluateDecisions();
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Decision") bool GetInterpretation(FName Id, float& Value) const;
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Decision") TArray<FFuzzyAIInterpretationValue> GetInterpretationSnapshot() const;
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Decision") TArray<FFuzzyAIActionScore> GetActionScores() const;
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Decision") UFuzzyAIAction* GetActiveAction() const;
+    UFUNCTION(BlueprintPure, Category="Fuzzy AI|Decision") TArray<UFuzzyAIAction*> GetRuntimeActions() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fuzzy AI")
     bool bAutoStart = true;
@@ -86,11 +128,11 @@ public:
     void RefreshAllObservations();
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
-    bool RequestObservationRefresh(FName Key);
+    bool RequestObservationRefresh(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key);
 
     /** Wire a source's change delegate to this function. Only SourceEvent entries are accepted. */
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
-    bool NotifyObservationSourceChanged(FName Key);
+    bool NotifyObservationSourceChanged(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key);
 
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     bool RequestObservationInstanceRefresh(UFuzzyObservation* Observation);
@@ -127,7 +169,7 @@ public:
     #pragma region Current Observation Reads
     /** Return value means key exists, not that its Result is valid or fresh. */
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
-    bool TryGetObservation(FName Key, FFuzzyAIObservationRecord& OutRecord) const;
+    bool TryGetObservation(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, FFuzzyAIObservationRecord& OutRecord) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     TArray<FFuzzyAIObservationRecord> GetObservationSnapshot() const;
@@ -135,13 +177,13 @@ public:
     #pragma endregion
     #pragma region Remembered Knowledge
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Memory")
-    bool TryGetRememberedObservation(FName Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const;
+    bool TryGetRememberedObservation(UPARAM(meta = (Categories = "Observation")) FGameplayTag Key, AActor* ForTarget, FFuzzyAIRememberedObservation& OutRecord) const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Memory")
     TArray<FFuzzyAIRememberedObservation> GetMemorySnapshot() const;
 
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Memory")
-    FFuzzyAITargetLocationKnowledge GetTargetLocationKnowledge(FName LocationKey = "Target.VisibleLocation") const;
+    FFuzzyAITargetLocationKnowledge GetTargetLocationKnowledge(UPARAM(meta = (Categories = "Observation")) FGameplayTag LocationKey = FGameplayTag()) const;
 
     #pragma endregion
     #pragma region Event History and Memory Control
@@ -176,6 +218,8 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UFuzzyObservationManager> ObservationManager;
 
+    UPROPERTY(Transient) TObjectPtr<UFuzzyAIDecisionRuntime> DecisionRuntime;
+
     #pragma endregion
     #pragma region Context and Configuration State
     UPROPERTY(Transient)
@@ -190,6 +234,7 @@ private:
     #pragma endregion
     #pragma region Scheduling and Deferred Actions
     FTimerHandle SchedulerHandle;
+    FTimerHandle DecisionHandle;
     FTimerHandle DeferredHandle;
     TArray<TFunction<void()>> DeferredActions;
     bool bRunning = false;
@@ -203,8 +248,8 @@ private:
     double Now() const;
     FFuzzyAIObservationContext MakeContext() const;
     void SchedulerUpdate();
-    void ProcessRefresh(const TArray<FName>& Keys);
-    TArray<FName> GetRefreshKeys(bool bContextOnly = false) const;
+    void ProcessRefresh(const TArray<FName>& SensorNames);
+    TArray<FName> GetRefreshSensorNames(bool bContextOnly = false) const;
     void ApplyTarget(AActor* NewTarget, bool bVisible);
     void Defer(TFunction<void()>&& Action);
     bool RecordEventAtTime(const FFuzzyAIObservedEvent& Event, double ReceiptTime);

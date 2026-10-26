@@ -8,6 +8,7 @@
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyaieditor\\definitions.fuzzyaieditor.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyaidebugger.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\fuzzyaidebugmodel.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyaieditor\\private\\debugger\\sfuzzyailayerpanel.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\core\\fuzzyaicomponent.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\observationruntimetypes.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\observation\\observationtypes.h",
@@ -16,6 +17,10 @@
             "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationtypes.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\observationruntimetypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaitypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaidebugtypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaidebugtypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaitypes.generated.h",
             "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaicomponent.generated.h",
             "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\engine\\classes\\engine\\selection.h",
             "c:\\program files\\epic games\\ue_5.7\\engine\\source\\editor\\unrealed\\public\\selection.h",
@@ -31,7 +36,8 @@
             "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementruntime\\uht\\typedelementselectioninterface.generated.h",
             "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\typedelementruntime\\uht\\typedelementselectionset.generated.h",
             "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\unrealed\\uht\\selection.generated.h",
-            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\slate\\public\\widgets\\input\\ssearchbox.h"
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\slate\\public\\widgets\\input\\ssearchbox.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\slate\\public\\widgets\\layout\\swidgetswitcher.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []

@@ -9,6 +9,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Actor.h"
+#include "Utility/FuzzyAIAction.h"
 
 #pragma region Display Formatting
 namespace FuzzyAIDebugger
@@ -41,10 +42,10 @@ namespace FuzzyAIDebugger
         return Record.bTargetDependent ? ActorName(Record.Target) : TEXT("Self / Custom");
     }
 
-    TSharedPtr<FFuzzyAIDebugRow> MakeRow(FName Key, const FFuzzyAIObservationResult& Result)
+    TSharedPtr<FFuzzyAIDebugRow> MakeRow(const FString& Key, const FFuzzyAIObservationResult& Result)
     {
         TSharedPtr<FFuzzyAIDebugRow> Row = MakeShared<FFuzzyAIDebugRow>();
-        Row->Key = Key.ToString();
+        Row->Key = Key;
         Row->Type = ValueType(Result.ValueType);
         Row->Value = FFuzzyAIDebugModel::FormatValue(Result);
         Row->bUnavailable = !Result.bIsValid;
@@ -158,12 +159,9 @@ FFuzzyAIDebugSnapshot FFuzzyAIDebugModel::Read(const UFuzzyAIComponent* Componen
     using namespace FuzzyAIDebugger;
     const double Now = World->GetTimeSeconds();
     Snapshot.bAvailable = true;
-    Snapshot.Title = FString::Printf(TEXT("%s / %s"), *Owner->GetActorNameOrLabel(), *Component->GetName());
-    Snapshot.Summary = FString::Printf(TEXT("%s\n%s | Target: %s | Sensors: %d configured, %d runtime\nMemory limit: %d facts / %d events | Event age limit: %s"),
-        *DescribeWorld(World), Component->IsObserving() ? TEXT("Running") : TEXT("Stopped - cached readings may be old"),
-        *GetNameSafe(Component->GetTarget()), Component->ObservationInstances.Num(), Component->GetRuntimeObservationInstances().Num(),
-        Component->MaxRememberedObservations, Component->MaxObservedEvents,
-        Component->ObservedEventMaxAge > 0.f ? *FString::Printf(TEXT("%.1f s"), Component->ObservedEventMaxAge) : TEXT("No time expiry"));
+    Snapshot.Title = Owner->GetActorNameOrLabel();
+    Snapshot.Summary = FString::Printf(TEXT("%s | %s | Target: %s"),
+        Component->IsObserving() ? TEXT("Running") : TEXT("Stopped"), *DescribeWorld(World), *GetNameSafe(Component->GetTarget()));
 
     TArray<FString> Errors = Component->GetConfigurationErrors();
     if (const UFuzzyObservationStore* Store = Component->GetObservationStore())
@@ -172,9 +170,96 @@ FFuzzyAIDebugSnapshot FFuzzyAIDebugModel::Read(const UFuzzyAIComponent* Componen
     }
     Snapshot.Diagnostics = FString::Join(Errors, TEXT("\n"));
 
+    TArray<FString> DecisionLines;
+    DecisionLines.Add(FString::Printf(TEXT("Decision evaluation: %s | Active: %s"),
+        Component->bEnableDecisions ? TEXT("Enabled") : TEXT("Disabled"),
+        Component->GetActiveAction() ? *Component->GetActiveAction()->ActionId.ToString() : TEXT("None")));
+    for (const auto& Score : Component->GetActionScores())
+        DecisionLines.Add(FString::Printf(TEXT("%s%s: %.3f | %s%s"), Score.bActive ? TEXT("> ") : TEXT(""),
+            *Score.ActionId.ToString(), Score.Score, Score.bEligible ? TEXT("Eligible") : TEXT("Unavailable"),
+            Score.Reason.IsEmpty() ? TEXT("") : *(TEXT(" | ") + Score.Reason)));
+    for (const auto& Value : Component->GetInterpretationSnapshot())
+        DecisionLines.Add(FString::Printf(TEXT("Interpretation %s: %s"), *Value.Id.ToString(),
+            Value.bValid ? *FString::Printf(TEXT("%.3f"), Value.Value) : TEXT("Unavailable")));
+    Snapshot.Decisions = FString::Join(DecisionLines, TEXT("\n"));
+
+    auto Number = [](float Value) { return FString::Printf(TEXT("%.3f"), Value); };
+    const auto Debug = Component->GetDecisionDebugSnapshot();
+    Snapshot.Selection = Debug.Selection;
+    Snapshot.TraceStatus = !Debug.bCaptureEnabled ? TEXT("Trace off") : Debug.EvaluationTime < 0. ? TEXT("No sample") :
+        FString::Printf(TEXT("Age %s%s"), *FormatAge(Debug.EvaluationTime, Now),
+            Debug.DroppedEntries > 0 ? *FString::Printf(TEXT(" | +%d omitted"), Debug.DroppedEntries) : TEXT(""));
+    for (const auto& Estimate : Component->GetInterpretationSnapshot())
+    {
+        auto Row = MakeShared<FFuzzyAIDebugRow>(); Row->Id = Estimate.Id.ToString(); Row->Key = Row->Id;
+        Row->Type = TEXT("Estimate"); Row->Value = Estimate.bValid ? Number(Estimate.Value) : TEXT("--");
+        Row->State = Estimate.bValid ? TEXT("Valid") : TEXT("Missing"); Row->bUnavailable = !Estimate.bValid;
+        Row->Score = Estimate.Value; Row->bHasScore = Estimate.bValid;
+        Snapshot.Estimates.Add(Row);
+    }
+    TMap<FString,TSharedPtr<FFuzzyAIDebugRow>> TraceRows;
+    for (const auto& Trace : Debug.Entries)
+    {
+        auto Row = MakeShared<FFuzzyAIDebugRow>();
+        Row->Id = FString::Printf(TEXT("%d/%s/%s/%s/%s"), static_cast<int32>(Trace.Layer), *Trace.Owner.ToString(), *Trace.Path, *Trace.Kind, *Trace.Source);
+        Row->Key = Trace.Path; Row->Subject = Trace.Owner.ToString(); Row->Type = Trace.Kind;
+        Row->Details = Trace.Source; Row->State = Trace.State; Row->bUnavailable = !Trace.bValid;
+        Row->Input = Trace.bHasInput ? Number(Trace.Input) : TEXT("--");
+        Row->Value = Trace.bHasValue ? Number(Trace.Value) : TEXT("--");
+        Row->Normalized = Trace.bHasNormalized ? Number(Trace.Normalized) : TEXT("--");
+        Row->Weight = Trace.bHasWeight ? Number(Trace.Weight) : TEXT("--");
+        Row->Curve = Trace.Curve; Row->MarkerX = Trace.Normalized; Row->MarkerY = Trace.Value;
+        Row->bHasMarker = Trace.bHasNormalized && Trace.bHasValue;
+        Row->Score = Trace.Value; Row->bHasScore = Trace.bHasValue;
+        Row->Tooltip = FString::Printf(TEXT("%s | %s | %s\n%s\n%s"), *Row->Subject, *Trace.Kind, *Trace.Path, *Trace.Source, *Trace.Details);
+        Row->Details.RemoveFromStart(TEXT("Observation."));
+        if (Trace.Kind == TEXT("Consideration"))
+        {
+            Row->Type = TEXT("Factor");
+            Row->Details = Trace.Source == TEXT("FuzzyAIInputConsideration") ? TEXT("Input curve") :
+                Trace.Source == TEXT("FuzzyAIUncertainConsideration") ? TEXT("Uncertain") : TEXT("Custom");
+        }
+        if (const auto* Existing = TraceRows.Find(Row->Id)) { **Existing = *Row; continue; }
+        TraceRows.Add(Row->Id,Row);
+        if (Trace.Layer == EFuzzyAIDebugLayer::Fuzzy) Snapshot.Fuzzy.Add(Row);
+        else if (Trace.Layer == EFuzzyAIDebugLayer::Utility) Snapshot.Factors.Add(Row);
+        else Snapshot.Factors.Add(Row);
+    }
+    for (const auto& Score : Component->GetActionScores())
+    {
+        auto Row = MakeShared<FFuzzyAIDebugRow>(); Row->Id = Score.ActionId.ToString(); Row->Key = Row->Id;
+        Row->Value = Number(Score.Score); Row->bHasScore = true; Row->Score = Score.Score;
+        Row->State = Score.bActive ? TEXT("Active") : Score.bEligible ? TEXT("Ready") : TEXT("Blocked");
+        Row->Details = Score.Reason; Row->Tooltip = Score.Reason;
+        if (Score.Reason == TEXT("Requirements / activation unavailable")) Row->Details = TEXT("Eligibility");
+        if (Score.Reason == TEXT("Non-finite score rejected")) Row->Details = TEXT("Invalid score");
+        Row->bUnavailable = !Score.bEligible;
+        if (Score.bActive) Row->Details = Debug.Selection;
+        Snapshot.Actions.Add(Row);
+    }
+    for (const auto& Execution : Debug.Executions)
+    {
+        auto Row = MakeShared<FFuzzyAIDebugRow>(); Row->Id = Execution.ActionId.ToString(); Row->Key = Row->Id;
+        Row->Type = TEXT("Action"); Row->State = Execution.Phase; Row->Subject = Execution.Target;
+        Row->Input = FString::Printf(TEXT("%.2fs"), Execution.Elapsed);
+        Row->Value = FString::Printf(TEXT("%.2fs"), Execution.Remaining);
+        Row->Weight = FString::Printf(TEXT("%.2fs"), Execution.Cooldown);
+        Row->Details = Execution.bInterruptible ? TEXT("Interruptible") : TEXT("Locked");
+        Row->Tooltip = Execution.Details;
+        Snapshot.Execution.Add(Row);
+    }
+    for (int32 i = Debug.History.Num() - 1; i >= 0; --i)
+    {
+        const auto& Event = Debug.History[i];
+        auto Row = MakeShared<FFuzzyAIDebugRow>(); Row->Key = Event.ActionId.ToString(); Row->State = Event.Event;
+        Row->Id = FString::Printf(TEXT("%s/%f"), *Row->Key, Event.Time);
+        Row->Age = FormatAge(Event.Time, Now); Row->Details = Event.Details; Row->Tooltip = Event.Details;
+        Snapshot.History.Add(Row);
+    }
+
     for (const FFuzzyAIObservationRecord& Record : Component->GetObservationSnapshot())
     {
-        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Record.Key, Record.Result);
+        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Record.Key.ToString(), Record.Result);
         Row->State = Record.Result.bIsValid ? TEXT("Valid") : TEXT("Invalid");
         Row->Subject = RecordSubject(Record);
         Row->Age = FormatAge(Record.LastAttemptTime, Now);
@@ -187,7 +272,7 @@ FFuzzyAIDebugSnapshot FFuzzyAIDebugModel::Read(const UFuzzyAIComponent* Componen
     for (const FFuzzyAIRememberedObservation& Remembered : Component->GetMemorySnapshot())
     {
         const FFuzzyAIObservationRecord& Record = Remembered.Observation;
-        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Record.Key, Record.Result);
+        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Record.Key.ToString(), Record.Result);
         Row->State = TEXT("Remembered");
         Row->Subject = RecordSubject(Record);
         Row->Age = FormatAge(Record.LastSuccessTime, Now);
@@ -199,7 +284,7 @@ FFuzzyAIDebugSnapshot FFuzzyAIDebugModel::Read(const UFuzzyAIComponent* Componen
     for (int32 Index = Events.Num() - 1; Index >= 0; --Index)
     {
         const FFuzzyAIObservedEvent& Event = Events[Index];
-        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Event.EventKey, Event.Payload);
+        TSharedPtr<FFuzzyAIDebugRow> Row = MakeRow(Event.EventKey.ToString(), Event.Payload);
         // An event occurrence is valid even when it has no payload.
         Row->bUnavailable = false;
         Row->State = Event.Payload.bIsValid ? TEXT("Recorded") : TEXT("No payload");

@@ -28,6 +28,17 @@ struct FFuzzyAIDebugRow
     FString Age;
     FString Details;
     bool bUnavailable = false;
+    FString Id;
+    FString Input;
+    FString Weight;
+    FString Normalized;
+    FString Tooltip;
+    TArray<FVector2D> Curve;
+    float MarkerX = 0.f;
+    float MarkerY = 0.f;
+    bool bHasMarker = false;
+    float Score = 0.f;
+    bool bHasScore = false;
 };
 
 struct FFuzzyAIDebugSnapshot
@@ -36,6 +47,15 @@ struct FFuzzyAIDebugSnapshot
     FString Title;
     FString Summary;
     FString Diagnostics;
+    FString Decisions;
+    FString Selection;
+    FString TraceStatus;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> Estimates;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> Fuzzy;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> Actions;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> Factors;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> Execution;
+    TArray<TSharedPtr<FFuzzyAIDebugRow>> History;
     TArray<TSharedPtr<FFuzzyAIDebugRow>> Store;
     TArray<TSharedPtr<FFuzzyAIDebugRow>> Memory;
     TArray<TSharedPtr<FFuzzyAIDebugRow>> Events;

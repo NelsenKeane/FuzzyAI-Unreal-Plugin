@@ -1,0 +1,22 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\private\\utility\\fuzzyaiutilitylibrary.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\unreal projects\\gameanimationsample\\intermediate\\build\\win64\\x64\\gameanimationsampleeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_4.h.pch",
+        "Includes": [
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\fuzzyairuntime\\definitions.fuzzyairuntime.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaiutilitylibrary.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaitypes.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "c:\\program files\\epic games\\ue_5.7\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\source\\fuzzyairuntime\\public\\utility\\fuzzyaidebugtypes.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaidebugtypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaitypes.generated.h",
+            "d:\\unreal projects\\gameanimationsample\\plugins\\fuzzyai\\intermediate\\build\\win64\\unrealeditor\\inc\\fuzzyairuntime\\uht\\fuzzyaiutilitylibrary.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

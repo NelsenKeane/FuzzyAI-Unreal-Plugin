@@ -9,7 +9,7 @@ public class FuzzyAIRuntime : ModuleRules
     {
         #region Module Configuration
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "GameplayTags" });
+        PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "GameplayTags", "AIModule", "NavigationSystem", "GameplayAbilities", "GameplayTasks" });
         #endregion
     }
 }

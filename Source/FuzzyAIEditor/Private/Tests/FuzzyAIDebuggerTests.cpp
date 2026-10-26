@@ -8,6 +8,7 @@
 #include "Debugger/SFuzzyAIDebugger.h"
 #include "Core/FuzzyAIComponent.h"
 #include "Observation/FuzzyObservation.h"
+#include "Observation/ObservationKeys.h"
 #include "Observation/FuzzyObservationStore.h"
 #include "Observation/Sensors/FuzzyStandardObservations.h"
 #include "Components/SceneComponent.h"
@@ -18,12 +19,16 @@
 #include "GameFramework/Actor.h"
 #include "HAL/FileManager.h"
 #include "ImageUtils.h"
+#include "InputCoreTypes.h"
 #include "Misc/App.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include "Widgets/Docking/SDockTab.h"
+#include "Widgets/Layout/SExpandableArea.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SSplitter.h"
 #include "Widgets/SWindow.h"
 
 #pragma region Test Fixtures
@@ -89,6 +94,32 @@ namespace FuzzyAIDebuggerTests
         return Match ? Match->Get() : nullptr;
     }
 
+    void FindExpandableAreas(const TSharedRef<SWidget>& Widget, TArray<TSharedRef<SExpandableArea>>& Areas)
+    {
+        if (Widget->GetType() == TEXT("SExpandableArea"))
+        {
+            if (Widget->GetTag() != TEXT("FuzzyAI.Decisions")) Areas.Add(StaticCastSharedRef<SExpandableArea>(Widget));
+            return;
+        }
+        FChildren* Children = Widget->GetChildren();
+        for (int32 Index = 0; Index < Children->Num(); ++Index)
+        {
+            FindExpandableAreas(Children->GetChildAt(Index), Areas);
+        }
+    }
+
+    template <typename WidgetType>
+    void FindWidgets(const TSharedRef<SWidget>& Widget, FName Type, TArray<TSharedRef<WidgetType>>& Found)
+    {
+        if (Widget->GetTag() == TEXT("FuzzyAI.Decisions")) return;
+        if (Widget->GetType() == Type) Found.Add(StaticCastSharedRef<WidgetType>(Widget));
+        FChildren* Children = Widget->GetChildren();
+        for (int32 Index = 0; Index < Children->Num(); ++Index)
+        {
+            FindWidgets(Children->GetChildAt(Index), Type, Found);
+        }
+    }
+
     bool CaptureWindow(const TSharedRef<SWindow>& Window, const FString& Name)
     {
         Window->SlatePrepass();
@@ -126,7 +157,7 @@ bool FFuzzyAIDebuggerSnapshotTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Snapshot identifies a valid enemy"), Visible.bAvailable);
     TestEqual(TEXT("All three current observations are shown"), Visible.Store.Num(), 3);
     TestEqual(TEXT("One successful location is remembered"), Visible.Memory.Num(), 1);
-    if (const auto* Distance = Find(Visible.Store, TEXT("Target.Distance")))
+    if (const auto* Distance = Find(Visible.Store, TEXT("Observation.Target.Distance")))
     {
         TestEqual(TEXT("Distance formatting"), Distance->Value, FString(TEXT("250.0")));
         TestEqual(TEXT("Valid state"), Distance->State, FString(TEXT("Valid")));
@@ -134,23 +165,23 @@ bool FFuzzyAIDebuggerSnapshotTest::RunTest(const FString& Parameters)
     else AddError(TEXT("Distance row missing"));
 
     FFuzzyAIObservationRecord Before;
-    Enemy->TryGetObservation(TEXT("Target.VisibleLocation"), Before);
+    Enemy->TryGetObservation(NKFuzzyAI::ObservationKeys::TargetVisibleLocation, Before);
     Target->SetActorLocation(FVector(900.f, 0.f, 0.f));
     const auto PassiveRead = FFuzzyAIDebugModel::Read(Enemy);
     FFuzzyAIObservationRecord After;
-    Enemy->TryGetObservation(TEXT("Target.VisibleLocation"), After);
+    Enemy->TryGetObservation(NKFuzzyAI::ObservationKeys::TargetVisibleLocation, After);
     TestEqual(TEXT("Inspecting does not resample a moving target"), After.Result.VectorValue, Before.Result.VectorValue);
     TestEqual(TEXT("Inspecting preserves attempt timestamp"), After.LastAttemptTime, Before.LastAttemptTime);
 
     Enemy->UpdateTargetSighting(Target, false);
     const auto Hidden = FFuzzyAIDebugModel::Read(Enemy);
-    if (const auto* Location = Find(Hidden.Store, TEXT("Target.VisibleLocation")))
+    if (const auto* Location = Find(Hidden.Store, TEXT("Observation.Target.VisibleLocation")))
     {
         TestTrue(TEXT("Current hidden location is unavailable"), Location->bUnavailable);
         TestFalse(TEXT("Failure reason is visible"), Location->Details.IsEmpty());
     }
     else AddError(TEXT("Current location row missing"));
-    if (const auto* Remembered = Find(Hidden.Memory, TEXT("Target.VisibleLocation")))
+    if (const auto* Remembered = Find(Hidden.Memory, TEXT("Observation.Target.VisibleLocation")))
     {
         TestEqual(TEXT("Hidden movement does not leak into remembered location"), Remembered->Value,
             Before.Result.VectorValue.ToCompactString());
@@ -230,6 +261,7 @@ bool FFuzzyAIDebuggerWidgetTest::RunTest(const FString& Parameters)
     First->UpdateTargetSighting(Fixture.Actor(FVector(200.f, 0.f, 0.f)), true);
 
     TSharedRef<SFuzzyAIDebugger> Widget = SNew(SFuzzyAIDebugger);
+    TestFalse(TEXT("Enemy drawer starts closed"), Widget->IsEnemyDrawerOpen());
     TestFalse(TEXT("No automatic enemy selection"), Widget->GetSnapshot().bAvailable);
     TestTrue(TEXT("Picker selects first enemy"), Widget->SelectComponent(First));
     TestTrue(TEXT("Selected enemy has running data"), Widget->GetSnapshot().Store.Num() == 3);
@@ -260,6 +292,82 @@ bool FFuzzyAIDebuggerWidgetTest::RunTest(const FString& Parameters)
         First->UpdateTargetSighting(First->GetTarget(), false);
         Widget->Refresh();
         TestTrue(TEXT("Hidden-target window screenshot"), CaptureWindow(Window, TEXT("HiddenTarget.png")));
+
+        TArray<TSharedRef<SExpandableArea>> Areas;
+        FindExpandableAreas(Widget, Areas);
+        if (TestEqual(TEXT("Three observation panels can collapse independently of the enemy drawer"), Areas.Num(), 3))
+        {
+            const float StoreHeight = Areas[0]->GetCachedGeometry().GetLocalSize().Y;
+            const float StorePosition = Areas[0]->GetCachedGeometry().GetAbsolutePosition().Y;
+            Widget->SetEnemyDrawerOpen(true);
+            Widget->Refresh();
+            TestTrue(TEXT("Open enemy drawer screenshot"), CaptureWindow(Window, TEXT("EnemyDrawerOpen.png")));
+            TestTrue(TEXT("Opening enemies does not shrink observations"),
+                FMath::IsNearlyEqual(Areas[0]->GetCachedGeometry().GetLocalSize().Y, StoreHeight, 1.f));
+            TestTrue(TEXT("Opening enemies does not move observations"),
+                FMath::IsNearlyEqual(Areas[0]->GetCachedGeometry().GetAbsolutePosition().Y, StorePosition, 1.f));
+            TestTrue(TEXT("Refresh keeps the enemy drawer open"), Widget->IsEnemyDrawerOpen());
+            Widget->OnKeyDown(Widget->GetCachedGeometry(), FKeyEvent(EKeys::Escape, FModifierKeysState(), 0, false, 0, 0));
+            TestFalse(TEXT("Escape closes the enemy drawer"), Widget->IsEnemyDrawerOpen());
+            TestTrue(TEXT("Closed drawer keeps the current selection"), Widget->GetSelectedComponent() == First);
+            TestTrue(TEXT("Closed enemy drawer screenshot"), CaptureWindow(Window, TEXT("EnemyDrawerClosed.png")));
+
+            TArray<TSharedRef<SSplitter>> Splitters;
+            FindWidgets(Widget, TEXT("SSplitter"), Splitters);
+            Splitters.RemoveAll([](const auto& Splitter) { return Splitter->GetTag() != TEXT("FuzzyAI.ObservationSplitter"); });
+            if (TestEqual(TEXT("Only observation panels share a splitter"), Splitters.Num(), 1))
+            {
+                Splitters[0]->SlotAt(0).SetSizeValue(0.001f);
+                TestTrue(TEXT("Minimum-sized observation screenshot"), CaptureWindow(Window, TEXT("MinimumPanel.png")));
+                TestTrue(TEXT("Observation panel cannot shrink below 180 pixels"), Areas[0]->GetCachedGeometry().GetLocalSize().Y >= 179.f);
+                Splitters[0]->SlotAt(0).SetSizeValue(0.40f);
+            }
+
+            for (int32 Index = 0; Index < 3; ++Index)
+            {
+                Areas[Index]->SetExpanded(false);
+            }
+            TestTrue(TEXT("All panels collapsed screenshot"), CaptureWindow(Window, TEXT("AllCollapsed.png")));
+            for (int32 Index = 0; Index < Areas.Num(); ++Index)
+            {
+                TestTrue(TEXT("Collapsed panels occupy only their header height"),
+                    Areas[Index]->GetCachedGeometry().GetLocalSize().Y < 50.f);
+                Areas[Index]->SetExpanded(true);
+            }
+            TestTrue(TEXT("Reexpanded panels screenshot"), CaptureWindow(Window, TEXT("Reexpanded.png")));
+            TestTrue(TEXT("Reexpanding restores the observation table height"),
+                FMath::IsNearlyEqual(Areas[0]->GetCachedGeometry().GetLocalSize().Y, StoreHeight, 1.f));
+
+            Window->Resize(FVector2D(780.f, 960.f));
+            Areas[1]->SetExpanded(false);
+            Areas[2]->SetExpanded(false);
+            TestTrue(TEXT("Narrow debugger screenshot"), CaptureWindow(Window, TEXT("NarrowPanels.png")));
+            TestTrue(TEXT("Collapsing other observations gives the store more height"),
+                Areas[0]->GetCachedGeometry().GetLocalSize().Y > StoreHeight);
+            TestTrue(TEXT("Collapsed tables retain their data"), Widget->GetSnapshot().Memory.Num() == 1);
+
+            Areas[1]->SetExpanded(true);
+            Areas[2]->SetExpanded(true);
+            Window->Resize(FVector2D(780.f, 440.f));
+            TestTrue(TEXT("Short debugger screenshot"), CaptureWindow(Window, TEXT("ShortPanels.png")));
+            TArray<TSharedRef<SScrollBox>> ScrollBoxes;
+            FindWidgets(Widget, TEXT("SScrollBox"), ScrollBoxes);
+            if (TestEqual(TEXT("One vertical panel scroller and three horizontal table scrollers"), ScrollBoxes.Num(), 4))
+            {
+                TestTrue(TEXT("Short tab can scroll to the lower observations"), ScrollBoxes[0]->GetScrollOffsetOfEnd() > 0.f);
+                TestTrue(TEXT("Narrow tables scroll instead of squeezing columns"), ScrollBoxes[1]->GetScrollOffsetOfEnd() > 0.f);
+                // Offscreen panels can retain cached geometry from their previous collapsed layout.
+                for (int32 Index = 0; Index < Areas.Num(); ++Index)
+                {
+                    ScrollBoxes[0]->ScrollDescendantIntoView(Areas[Index], false);
+                    TestTrue(TEXT("Short panel screenshot"), CaptureWindow(Window, FString::Printf(TEXT("ShortPanel%d.png"), Index)));
+                    const float Height = Areas[Index]->GetCachedGeometry().GetLocalSize().Y;
+                    TestTrue(FString::Printf(TEXT("Panel %d retains its minimum height when visible (%.1f)"), Index, Height), Height >= 179.f);
+                }
+                ScrollBoxes[0]->ScrollToEnd();
+                TestTrue(TEXT("Lower observation panels screenshot"), CaptureWindow(Window, TEXT("ShortPanelsScrolled.png")));
+            }
+        }
         FSlateApplication::Get().DestroyWindowImmediately(Window);
     }
 
