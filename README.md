@@ -1,5 +1,12 @@
 # FuzzyAI
-Core component, inline observations, utility actions, optional fuzzy interpretations and editor debugger for enemy AI.
+
+FuzzyAI is an Unreal Engine plugin for enemy decision making. It combines observations, memory, utility scoring, and optional fuzzy rules, with a live editor debugger for inspecting what each enemy sees and how it scores its actions.
+
+## Enemy AI demo
+
+The 2 minute 52 second recording shows the FuzzyAI Debugger alongside a live combat encounter in Unreal Engine. Watch the debugger update as the enemy moves, attacks, and reacts during play.
+
+[Watch the enemy AI demo (MP4)](https://raw.githubusercontent.com/NelsenKeane/FuzzyAI-Unreal-Plugin/main/Media/enemy-ai-demo.mp4)
 
 Add one **FuzzyAIComponent** to an enemy. Configure its **Observations** array with inline sensor objects. Each enemy receives independent runtime sensor instances, a current-value store and local memory. No additional Actor Components are required.
 
