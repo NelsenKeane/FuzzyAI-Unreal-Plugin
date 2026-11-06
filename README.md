@@ -6,8 +6,6 @@ FuzzyAI is an Unreal Engine plugin for enemy decision making. It combines observ
 
 The 2 minute 52 second recording shows the FuzzyAI Debugger alongside a live combat encounter in Unreal Engine. Watch the debugger update as the enemy moves, attacks, and reacts during play.
 
-![FuzzyAI Debugger Utility panel showing action scores and the active melee combo during Play in Editor](Media/fuzzyai-debugger.png)
-
 [Download the enemy AI demo (MP4, 35 MB)](https://raw.githubusercontent.com/NelsenKeane/FuzzyAI-Unreal-Plugin/main/Media/enemy-ai-demo.mp4)
 
 Add one **FuzzyAIComponent** to an enemy. Configure its **Observations** array with inline sensor objects. Each enemy receives independent runtime sensor instances, a current-value store and local memory. No additional Actor Components are required.
@@ -53,6 +51,10 @@ For the debugger, read [FuzzyAIDebugModel.h](Source/FuzzyAIEditor/Private/Debugg
 ## FuzzyAI editor debugger
 
 Open **Window > FuzzyAI Debugger**. The tab can be docked or floated like other Unreal panels.
+
+![FuzzyAI Debugger showing the Utility tab, action scores, eligibility gates, and the selected response curve](Media/fuzzyai-debugger.png)
+
+The **Utility** tab shows each action’s score and eligibility. In this test scene, the selected factor shows how the debugger maps a target distance of 300 to a score of 0.75 on the response curve.
 
 1. Start Play or Simulate with an enemy that has FuzzyAIComponent. No additional component or Blueprint binding is needed for the debugger.
 2. Click **Enemies** on the bottom bar to open the enemy drawer, then select the enemy/component. Search by actor, component or world name. **Inspect** uses a selected actor in the listed world; it does not remap an editor actor to a PIE copy.
