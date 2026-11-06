@@ -13,8 +13,10 @@ static_assert(!UE_WITH_CONSTINIT_UOBJECT, "This generated code can only be compi
 void EmptyLinkFunctionForGeneratedCodeFuzzyAIStandardActions() {}
 
 // ********** Begin Cross Module References ********************************************************
+AIMODULE_API UClass* Z_Construct_UClass_AAIController_NoRegister();
 AIMODULE_API UClass* Z_Construct_UClass_UPathFollowingComponent_NoRegister();
 COREUOBJECT_API UClass* Z_Construct_UClass_UClass_NoRegister();
+ENGINE_API UClass* Z_Construct_UClass_UCharacterMovementComponent_NoRegister();
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIAbilityAction();
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIAbilityAction_NoRegister();
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIAction();
@@ -145,7 +147,86 @@ struct Z_Construct_UClass_UFuzzyAIMoveAction_Statics
 		{ "ToolTip", "Explicitly permits remembered positions; never reads a hidden target's live transform." },
 #endif
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bContinuousApproach_MetaData[] = {
+		{ "Category", "Movement" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Keep approach active at arrival and refresh its goal from permitted knowledge. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Keep approach active at arrival and refresh its goal from permitted knowledge." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_RepathInterval_MetaData[] = {
+		{ "Category", "Movement" },
+		{ "ClampMin", "0.05" },
+		{ "EditCondition", "bContinuousApproach" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_RepathDistance_MetaData[] = {
+		{ "Category", "Movement" },
+		{ "ClampMin", "1" },
+		{ "EditCondition", "bContinuousApproach" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MaxLastSeenAge_MetaData[] = {
+		{ "Category", "Movement" },
+		{ "ClampMin", "0.01" },
+		{ "EditCondition", "bAllowLastSeenLocation" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bScanAtLastSeenLocation_MetaData[] = {
+		{ "Category", "Movement" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Sweep the view at the remembered location until current sight returns or memory expires. */" },
+#endif
+		{ "EditCondition", "bContinuousApproach && bAllowLastSeenLocation && bFaceKnownTarget" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Sweep the view at the remembered location until current sight returns or memory expires." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_StopApproachWithin_MetaData[] = {
+		{ "Category", "Movement" },
+		{ "ClampMin", "0" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Stop visible pursuit inside this distance. Remembered search still uses the acceptance radius. */" },
+#endif
+		{ "EditCondition", "bContinuousApproach" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Stop visible pursuit inside this distance. Remembered search still uses the acceptance radius." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ApproachDecisionSeconds_MetaData[] = {
+		{ "Category", "Movement" },
+		{ "ClampMin", "0" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Yield after this many seconds of visible approach so the next decision can choose a different action. */" },
+#endif
+		{ "EditCondition", "bContinuousApproach" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Yield after this many seconds of visible approach so the next decision can choose a different action." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bFaceKnownTarget_MetaData[] = {
+		{ "Category", "Movement" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Faces a known point, with scoped character rotation settings; never a hidden actor. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Faces a known point, with scoped character rotation settings; never a hidden actor." },
+#endif
+	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_PathFollowing_MetaData[] = {
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MoveController_MetaData[] = {
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_FacingMovement_MetaData[] = {
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
 	};
 #endif // WITH_METADATA
@@ -157,7 +238,20 @@ struct Z_Construct_UClass_UFuzzyAIMoveAction_Statics
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_AcceptanceRadius;
 	static void NewProp_bAllowLastSeenLocation_SetBit(void* Obj);
 	static const UECodeGen_Private::FBoolPropertyParams NewProp_bAllowLastSeenLocation;
+	static void NewProp_bContinuousApproach_SetBit(void* Obj);
+	static const UECodeGen_Private::FBoolPropertyParams NewProp_bContinuousApproach;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_RepathInterval;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_RepathDistance;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_MaxLastSeenAge;
+	static void NewProp_bScanAtLastSeenLocation_SetBit(void* Obj);
+	static const UECodeGen_Private::FBoolPropertyParams NewProp_bScanAtLastSeenLocation;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_StopApproachWithin;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ApproachDecisionSeconds;
+	static void NewProp_bFaceKnownTarget_SetBit(void* Obj);
+	static const UECodeGen_Private::FBoolPropertyParams NewProp_bFaceKnownTarget;
 	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_PathFollowing;
+	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_MoveController;
+	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_FacingMovement;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 // ********** End Class UFuzzyAIMoveAction constinit property declarations *************************
 	static UObject* (*const DependentSingletons[])();
@@ -177,14 +271,46 @@ void Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bAllowLastSeenLocati
 	((UFuzzyAIMoveAction*)Obj)->bAllowLastSeenLocation = 1;
 }
 const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bAllowLastSeenLocation = { "bAllowLastSeenLocation", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UFuzzyAIMoveAction), &Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bAllowLastSeenLocation_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bAllowLastSeenLocation_MetaData), NewProp_bAllowLastSeenLocation_MetaData) };
+void Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bContinuousApproach_SetBit(void* Obj)
+{
+	((UFuzzyAIMoveAction*)Obj)->bContinuousApproach = 1;
+}
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bContinuousApproach = { "bContinuousApproach", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UFuzzyAIMoveAction), &Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bContinuousApproach_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bContinuousApproach_MetaData), NewProp_bContinuousApproach_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_RepathInterval = { "RepathInterval", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, RepathInterval), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_RepathInterval_MetaData), NewProp_RepathInterval_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_RepathDistance = { "RepathDistance", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, RepathDistance), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_RepathDistance_MetaData), NewProp_RepathDistance_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_MaxLastSeenAge = { "MaxLastSeenAge", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, MaxLastSeenAge), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MaxLastSeenAge_MetaData), NewProp_MaxLastSeenAge_MetaData) };
+void Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bScanAtLastSeenLocation_SetBit(void* Obj)
+{
+	((UFuzzyAIMoveAction*)Obj)->bScanAtLastSeenLocation = 1;
+}
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bScanAtLastSeenLocation = { "bScanAtLastSeenLocation", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UFuzzyAIMoveAction), &Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bScanAtLastSeenLocation_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bScanAtLastSeenLocation_MetaData), NewProp_bScanAtLastSeenLocation_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_StopApproachWithin = { "StopApproachWithin", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, StopApproachWithin), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_StopApproachWithin_MetaData), NewProp_StopApproachWithin_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_ApproachDecisionSeconds = { "ApproachDecisionSeconds", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, ApproachDecisionSeconds), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ApproachDecisionSeconds_MetaData), NewProp_ApproachDecisionSeconds_MetaData) };
+void Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bFaceKnownTarget_SetBit(void* Obj)
+{
+	((UFuzzyAIMoveAction*)Obj)->bFaceKnownTarget = 1;
+}
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bFaceKnownTarget = { "bFaceKnownTarget", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UFuzzyAIMoveAction), &Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bFaceKnownTarget_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bFaceKnownTarget_MetaData), NewProp_bFaceKnownTarget_MetaData) };
 const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_PathFollowing = { "PathFollowing", nullptr, (EPropertyFlags)0x0044000000082008, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, PathFollowing), Z_Construct_UClass_UPathFollowingComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_PathFollowing_MetaData), NewProp_PathFollowing_MetaData) };
+const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_MoveController = { "MoveController", nullptr, (EPropertyFlags)0x0044000000002000, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, MoveController), Z_Construct_UClass_AAIController_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MoveController_MetaData), NewProp_MoveController_MetaData) };
+const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_FacingMovement = { "FacingMovement", nullptr, (EPropertyFlags)0x0044000000082008, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIMoveAction, FacingMovement), Z_Construct_UClass_UCharacterMovementComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_FacingMovement_MetaData), NewProp_FacingMovement_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UFuzzyAIMoveAction_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_Mode_Underlying,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_Mode,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_MoveDistance,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_AcceptanceRadius,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bAllowLastSeenLocation,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bContinuousApproach,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_RepathInterval,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_RepathDistance,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_MaxLastSeenAge,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bScanAtLastSeenLocation,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_StopApproachWithin,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_ApproachDecisionSeconds,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_bFaceKnownTarget,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_PathFollowing,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_MoveController,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIMoveAction_Statics::NewProp_FacingMovement,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_UFuzzyAIMoveAction_Statics::PropPointers) < 2048);
 // ********** End Class UFuzzyAIMoveAction Property Definitions ************************************
@@ -265,6 +391,16 @@ struct Z_Construct_UClass_UFuzzyAIAbilityAction_Statics
 		{ "Category", "Ability" },
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_AbilityVariants_MetaData[] = {
+		{ "Category", "Ability" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** When set, choose uniformly among eligible grants of AbilityClass and these variants on each start. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "When set, choose uniformly among eligible grants of AbilityClass and these variants on each start." },
+#endif
+	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ActivationEvent_MetaData[] = {
 		{ "Category", "Ability" },
 #if !UE_BUILD_SHIPPING
@@ -275,6 +411,17 @@ struct Z_Construct_UClass_UFuzzyAIAbilityAction_Statics
 		{ "ToolTip", "Optional: activates this specific granted ability with event data containing Observer and Target." },
 #endif
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MaxComboFollowUps_MetaData[] = {
+		{ "Category", "Ability" },
+		{ "ClampMin", "0" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** For light attacks, send one continue request per montage during its authored combo window. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "For light attacks, send one continue request per montage during its authored combo window." },
+#endif
+	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_AbilitySystem_MetaData[] = {
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIStandardActions.h" },
 	};
@@ -282,7 +429,10 @@ struct Z_Construct_UClass_UFuzzyAIAbilityAction_Statics
 
 // ********** Begin Class UFuzzyAIAbilityAction constinit property declarations ********************
 	static const UECodeGen_Private::FClassPropertyParams NewProp_AbilityClass;
+	static const UECodeGen_Private::FClassPropertyParams NewProp_AbilityVariants_Inner;
+	static const UECodeGen_Private::FArrayPropertyParams NewProp_AbilityVariants;
 	static const UECodeGen_Private::FStructPropertyParams NewProp_ActivationEvent;
+	static const UECodeGen_Private::FIntPropertyParams NewProp_MaxComboFollowUps;
 	static const UECodeGen_Private::FWeakObjectPropertyParams NewProp_AbilitySystem;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 // ********** End Class UFuzzyAIAbilityAction constinit property declarations **********************
@@ -295,11 +445,17 @@ struct Z_Construct_UClass_UFuzzyAIAbilityAction_Statics
 
 // ********** Begin Class UFuzzyAIAbilityAction Property Definitions *******************************
 const UECodeGen_Private::FClassPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityClass = { "AbilityClass", nullptr, (EPropertyFlags)0x0014000000000015, UECodeGen_Private::EPropertyGenFlags::Class, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAbilityAction, AbilityClass), Z_Construct_UClass_UClass_NoRegister, Z_Construct_UClass_UGameplayAbility_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_AbilityClass_MetaData), NewProp_AbilityClass_MetaData) };
+const UECodeGen_Private::FClassPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityVariants_Inner = { "AbilityVariants", nullptr, (EPropertyFlags)0x0004000000000000, UECodeGen_Private::EPropertyGenFlags::Class, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UClass_UClass_NoRegister, Z_Construct_UClass_UGameplayAbility_NoRegister, METADATA_PARAMS(0, nullptr) };
+const UECodeGen_Private::FArrayPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityVariants = { "AbilityVariants", nullptr, (EPropertyFlags)0x0014000000000015, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAbilityAction, AbilityVariants), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_AbilityVariants_MetaData), NewProp_AbilityVariants_MetaData) };
 const UECodeGen_Private::FStructPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_ActivationEvent = { "ActivationEvent", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAbilityAction, ActivationEvent), Z_Construct_UScriptStruct_FGameplayTag, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ActivationEvent_MetaData), NewProp_ActivationEvent_MetaData) }; // 517357616
+const UECodeGen_Private::FIntPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_MaxComboFollowUps = { "MaxComboFollowUps", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Int, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAbilityAction, MaxComboFollowUps), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MaxComboFollowUps_MetaData), NewProp_MaxComboFollowUps_MetaData) };
 const UECodeGen_Private::FWeakObjectPropertyParams Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilitySystem = { "AbilitySystem", nullptr, (EPropertyFlags)0x0044000000082008, UECodeGen_Private::EPropertyGenFlags::WeakObject, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAbilityAction, AbilitySystem), Z_Construct_UClass_UAbilitySystemComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_AbilitySystem_MetaData), NewProp_AbilitySystem_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityClass,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityVariants_Inner,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilityVariants,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_ActivationEvent,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_MaxComboFollowUps,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::NewProp_AbilitySystem,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_UFuzzyAIAbilityAction_Statics::PropPointers) < 2048);
@@ -346,11 +502,11 @@ struct Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_Fuzz
 		{ EFuzzyAIMoveMode_StaticEnum, TEXT("EFuzzyAIMoveMode"), &Z_Registration_Info_UEnum_EFuzzyAIMoveMode, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 3152976691U) },
 	};
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_UFuzzyAIMoveAction, UFuzzyAIMoveAction::StaticClass, TEXT("UFuzzyAIMoveAction"), &Z_Registration_Info_UClass_UFuzzyAIMoveAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIMoveAction), 2320938999U) },
-		{ Z_Construct_UClass_UFuzzyAIAbilityAction, UFuzzyAIAbilityAction::StaticClass, TEXT("UFuzzyAIAbilityAction"), &Z_Registration_Info_UClass_UFuzzyAIAbilityAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIAbilityAction), 2744581134U) },
+		{ Z_Construct_UClass_UFuzzyAIMoveAction, UFuzzyAIMoveAction::StaticClass, TEXT("UFuzzyAIMoveAction"), &Z_Registration_Info_UClass_UFuzzyAIMoveAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIMoveAction), 2180006336U) },
+		{ Z_Construct_UClass_UFuzzyAIAbilityAction, UFuzzyAIAbilityAction::StaticClass, TEXT("UFuzzyAIAbilityAction"), &Z_Registration_Info_UClass_UFuzzyAIAbilityAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIAbilityAction), 339744253U) },
 	};
 }; // Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIStandardActions_h__Script_FuzzyAIRuntime_Statics 
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIStandardActions_h__Script_FuzzyAIRuntime_1227088718{
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIStandardActions_h__Script_FuzzyAIRuntime_160204054{
 	TEXT("/Script/FuzzyAIRuntime"),
 	Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIStandardActions_h__Script_FuzzyAIRuntime_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIStandardActions_h__Script_FuzzyAIRuntime_Statics::ClassInfo),
 	nullptr, 0,

@@ -13,6 +13,7 @@
 #include "UObject/StrongObjectPtr.h"
 #include "Utility/FuzzyAIDecisionRuntime.h"
 #include "Utility/FuzzyAIAction.h"
+#include "Utility/FuzzyAIDecisionProfile.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFuzzyAIRuntime, Log, All);
 
@@ -153,8 +154,12 @@ void UFuzzyAIComponent::EvaluateDecisions()
         Defer([this]() { EvaluateDecisions(); });
         return;
     }
-    TGuardValue<bool> Guard(bProcessing, true);
-    DecisionRuntime->Update();
+    RefreshTrackedSight();
+    if (bRunning && !bEndingPlay)
+    {
+        TGuardValue<bool> Guard(bProcessing, true);
+        DecisionRuntime->Update();
+    }
 }
 
 bool UFuzzyAIComponent::GetInterpretation(FName Id, float& Value) const
@@ -376,6 +381,7 @@ void UFuzzyAIComponent::ApplyTarget(AActor* NewTarget, bool bVisible)
         Defer([this, WeakTarget, bVisible]() { ApplyTarget(WeakTarget.Get(), bVisible); });
         return;
     }
+    AActor* PreviousVisibleTarget = GetVisibleTarget();
     const bool bNewIdentity = CurrentTarget != NewTarget;
     if (bNewIdentity)
     {
@@ -384,6 +390,7 @@ void UFuzzyAIComponent::ApplyTarget(AActor* NewTarget, bool bVisible)
             OldTarget->OnDestroyed.RemoveDynamic(this, &UFuzzyAIComponent::HandleTargetDestroyed);
         }
         CurrentTarget = NewTarget;
+        LastTrackedSight = -1.;
         if (NewTarget)
         {
             NewTarget->OnDestroyed.AddUniqueDynamic(this, &UFuzzyAIComponent::HandleTargetDestroyed);
@@ -392,6 +399,11 @@ void UFuzzyAIComponent::ApplyTarget(AActor* NewTarget, bool bVisible)
     }
     const bool bVisibilityChanged = bTargetVisible != bVisible;
     bTargetVisible = bVisible;
+    if (bVisible && LastTrackedSight < 0.) LastTrackedSight = Now();
+    if (bVisibilityChanged || (bNewIdentity && PreviousVisibleTarget != GetVisibleTarget()))
+    {
+        OnVisibleTargetChanged.Broadcast(GetVisibleTarget());
+    }
     if (bRunning && (bNewIdentity || bVisibilityChanged || bVisible))
     {
         ProcessRefresh(GetRefreshSensorNames(true));
@@ -413,6 +425,12 @@ void UFuzzyAIComponent::SetTargetVisibility(bool bVisible)
 
 void UFuzzyAIComponent::UpdateTargetSighting(AActor* SensedTarget, bool bVisible)
 {
+    // Once acquired, cone transitions for this actor yield to the obstruction trace.
+    if (SensedTarget && SensedTarget == CurrentTarget && LastTrackedSight >= 0. &&
+        DecisionProfile && DecisionProfile->OccludedTargetRetention > 0. && bEnableDecisions && bRunning)
+    {
+        return;
+    }
     if (bVisible && IsValid(SensedTarget))
     {
         ApplyTarget(SensedTarget, true);
@@ -420,6 +438,41 @@ void UFuzzyAIComponent::UpdateTargetSighting(AActor* SensedTarget, bool bVisible
     else if (SensedTarget && CurrentTarget == SensedTarget)
     {
         ApplyTarget(SensedTarget, false);
+    }
+}
+
+void UFuzzyAIComponent::RefreshTrackedSight()
+{
+    AActor* Target = CurrentTarget.Get();
+    AActor* Observer = GetOwner();
+    const float Retention = DecisionProfile ? DecisionProfile->OccludedTargetRetention : 0.f;
+    if (Retention <= 0.f || LastTrackedSight < 0. || !IsValid(Target) || !IsValid(Observer)) return;
+
+    FVector ObserverEyes, TargetEyes;
+    FRotator UnusedRotation;
+    Observer->GetActorEyesViewPoint(ObserverEyes, UnusedRotation);
+    Target->GetActorEyesViewPoint(TargetEyes, UnusedRotation);
+    FCollisionQueryParams Query(SCENE_QUERY_STAT(FuzzyTrackedSight), false, Observer);
+    Query.AddIgnoredActor(Target);
+    TArray<AActor*> Attached;
+    Observer->GetAttachedActors(Attached, true, true);
+    Query.AddIgnoredActors(Attached);
+    Target->GetAttachedActors(Attached, true, true);
+    Query.AddIgnoredActors(Attached);
+
+    const double Time = Now();
+    if (!GetWorld()->LineTraceTestByChannel(ObserverEyes, TargetEyes, ECC_Visibility, Query))
+    {
+        LastTrackedSight = Time;
+        ApplyTarget(Target, true);
+    }
+    else if (Time - LastTrackedSight >= Retention)
+    {
+        ApplyTarget(nullptr, false);
+    }
+    else if (bTargetVisible)
+    {
+        ApplyTarget(Target, false);
     }
 }
 

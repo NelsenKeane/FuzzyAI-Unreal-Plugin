@@ -36,8 +36,11 @@ float UFuzzyAIDebugCountingConsideration::EvaluateContext_Implementation(const F
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Components/SceneComponent.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AISystem.h"
 #include "AIController.h"
 #include "GameplayTagsManager.h"
 #include "Interfaces/IPluginManager.h"
@@ -125,6 +128,86 @@ namespace FuzzyAIUtilityTests
     }
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAITrackedSightTest, "FuzzyAI.Utility.TrackedSightAndIdle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFuzzyAITrackedSightTest::RunTest(const FString& Parameters)
+{
+    using namespace FuzzyAIUtilityTests;
+    FWorld Fixture;
+    auto* Component = Fixture.Component();
+    auto* Target = Fixture.Actor(FVector(200.f, 0.f, 0.f));
+    auto* Profile = NewObject<UFuzzyAIDecisionProfile>(Component);
+    Profile->OccludedTargetRetention = 1.f;
+    auto* Idle = NewObject<UFuzzyAIWaitAction>(Profile);
+    Idle->BaseScore = 0.03f;
+    Idle->bWaitUntilInterrupted = true;
+    Idle->bCancelOnTargetChange = false;
+    Idle->Timeout = 0.1f;
+    Profile->Actions = {Idle};
+    Component->DecisionProfile = Profile;
+    Component->ObservationInstances = {NewObject<UFuzzyTargetLocationObservation>(Component)};
+    if (!TestTrue(TEXT("Fixture starts"), Component->StartAI())) return false;
+    const auto* RunningIdle = Component->GetActiveAction();
+    if (!TestNotNull(TEXT("Idle starts"), RunningIdle)) return false;
+    Component->SetTarget(Target);
+    Component->EvaluateDecisions();
+    TestFalse(TEXT("A clear trace alone cannot acquire"), Component->GetTargetLocationKnowledge().bHasActiveLocation);
+    Component->UpdateTargetSighting(Target, true);
+    Target->SetActorLocation(FVector(-200.f, 0.f, 0.f));
+    Component->UpdateTargetSighting(Target, false);
+    Component->EvaluateDecisions();
+    auto Knowledge = Component->GetTargetLocationKnowledge();
+    TestTrue(TEXT("Clear rear trace retains sight after cone loss"), Knowledge.bHasActiveLocation);
+    TestEqual(TEXT("Rear position is sampled"), Knowledge.ActiveLocation, Target->GetActorLocation());
+
+    auto* Wall = Fixture.Actor(FVector(-100.f, 0.f, 0.f));
+    auto* Box = NewObject<UBoxComponent>(Wall);
+    Box->SetupAttachment(Wall->GetRootComponent());
+    Box->SetBoxExtent(FVector(15.f, 100.f, 100.f));
+    Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    Box->SetCollisionResponseToAllChannels(ECR_Ignore);
+    Box->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+    Box->RegisterComponent();
+    Target->SetActorLocation(FVector(-250.f, 0.f, 0.f));
+    Component->EvaluateDecisions();
+    Knowledge = Component->GetTargetLocationKnowledge();
+    TestFalse(TEXT("Wall blocks tracked sight"), Knowledge.bHasActiveLocation);
+    TestTrue(TEXT("The last visible position is retained"), Knowledge.bHasLastSeenLocation);
+    TestEqual(TEXT("Hidden movement is absent from memory"), Knowledge.LastSeenLocation, FVector(-200.f, 0.f, 0.f));
+    Fixture.Advance(1.1f);
+    Component->EvaluateDecisions();
+    TestNull(TEXT("Expired target must be spotted again"), Component->GetTarget());
+    TestTrue(TEXT("Idle stays active across sight loss and timeout"), Component->GetActiveAction() == RunningIdle);
+    TestEqual(TEXT("Idle ran only once"), Component->GetDecisionDebugSnapshot().History.Num(), 1);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIWeightedActionTest, "FuzzyAI.Utility.WeightedActionBoundary", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFuzzyAIWeightedActionTest::RunTest(const FString& Parameters)
+{
+    using namespace FuzzyAIUtilityTests;
+    FWorld Fixture;
+    auto* Component = Fixture.Component();
+    auto* Profile = NewObject<UFuzzyAIDecisionProfile>(Component);
+    Profile->bWeightedActionSelection = true;
+    auto* Chase = Wait(Profile, TEXT("Shared"), 0.4f);
+    Chase->MinimumRunTime = 0.f;
+    auto* Special = NewObject<UFuzzyAIWaitAction>(Profile);
+    Special->BaseScore = 1.f;
+    Special->bEnabled = false;
+    Profile->Actions = {Chase, Special};
+    Component->DecisionProfile = Profile;
+    if (!TestTrue(TEXT("Weighted profile starts"), Component->StartAI())) return false;
+    const auto RuntimeActions = Component->GetRuntimeActions();
+    TestEqual(TEXT("Eligible chase starts"), Component->GetActiveAction(), RuntimeActions[0]);
+    RuntimeActions[1]->bEnabled = true;
+    Component->EvaluateDecisions();
+    TestEqual(TEXT("Higher utility does not interrupt the current weighted choice"), Component->GetActiveAction(), RuntimeActions[0]);
+    RuntimeActions[0]->FinishAction();
+    Component->EvaluateDecisions();
+    TestEqual(TEXT("Special becomes available at the next decision boundary"), Component->GetActiveAction(), RuntimeActions[1]);
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIActionTagTest, "FuzzyAI.Utility.ActionTagIdentity", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FFuzzyAIActionTagTest::RunTest(const FString& Parameters)
 {
@@ -163,6 +246,81 @@ bool FFuzzyAIActionTagTest::RunTest(const FString& Parameters)
     Component->StopAI();
     TestEqual(TEXT("Finished delegate carries tag"), Receiver->FinishedId, Parent->ActionId);
     TestEqual(TEXT("Cancellation result preserved"), Receiver->FinishedResult, EFuzzyAIActionResult::Cancelled);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFuzzyAIContinuousApproachTest, "FuzzyAI.Utility.ContinuousApproachKnowledge", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFuzzyAIContinuousApproachTest::RunTest(const FString& Parameters)
+{
+    using namespace FuzzyAIUtilityTests;
+    FWorld Fixture;
+    auto* Pawn = Fixture.World->SpawnActor<ACharacter>();
+    auto* Controller = Fixture.World->SpawnActor<AAIController>();
+    Controller->Possess(Pawn);
+    auto* Movement = Pawn->GetCharacterMovement();
+    Movement->bOrientRotationToMovement = true;
+    Movement->bUseControllerDesiredRotation = false;
+    auto* Component = Fixture.Component(Pawn);
+    Component->ObservationInstances = {NewObject<UFuzzyTargetLocationObservation>(Component)};
+    auto* Target = Fixture.Actor(FVector(100.f,40.f,0.f));
+    Component->UpdateTargetSighting(Target,true);
+    auto* Chase = NewObject<UFuzzyAIMoveAction>(Component);
+    Chase->bContinuousApproach = true; Chase->bFaceKnownTarget = true;
+    Chase->bAllowLastSeenLocation = true; Chase->MaxLastSeenAge = 0.3f;
+    Chase->AcceptanceRadius = 200.f; Chase->Cooldown = 0.f; Chase->Timeout = 5.f;
+    Component->Actions = {Chase};
+    if (!TestTrue(TEXT("Continuous approach starts within range"),Component->StartAI())) return false;
+    auto* Active = Component->GetActiveAction();
+    if (!TestNotNull(TEXT("Arrival holds action instead of restarting"),Active)) return false;
+    TestTrue(TEXT("Facing sets a known point"),Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay).Equals(Target->GetActorLocation(),1.f));
+    TestFalse(TEXT("Facing disables movement-only orientation"),Movement->bOrientRotationToMovement);
+    TestTrue(TEXT("Facing enables controller rotation"),Movement->bUseControllerDesiredRotation);
+    Fixture.Advance(0.15f); Component->EvaluateDecisions();
+    TestEqual(TEXT("In-range pursuit retains its execution"),Component->GetActiveAction(),Active);
+    TestEqual(TEXT("No repeated arrival lifecycle events"),Component->GetDecisionDebugSnapshot().History.Num(),1);
+    Component->UpdateTargetSighting(Target,false);
+    const FVector Remembered = Target->GetActorLocation();
+    Target->SetActorLocation(FVector(-1000.f,-1000.f,0.f));
+    Fixture.Advance(0.1f); Component->EvaluateDecisions();
+    TestTrue(TEXT("Brief sight loss keeps pursuit"),Component->GetActiveAction()==Active);
+    TestTrue(TEXT("Hidden movement never updates facing"),Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay).Equals(Remembered,1.f));
+    Fixture.Advance(0.3f); Component->EvaluateDecisions();
+    TestNull(TEXT("Expired permitted memory ends pursuit"),Component->GetActiveAction());
+    TestFalse(TEXT("Owned focus cleared on expiry"),FAISystem::IsValidLocation(Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay)));
+    TestTrue(TEXT("Original orientation restored"),Movement->bOrientRotationToMovement);
+    TestFalse(TEXT("Original desired-rotation flag restored"),Movement->bUseControllerDesiredRotation);
+    Component->StopAI();
+    Target->SetActorLocation(FVector(100.f,40.f,0.f)); Component->UpdateTargetSighting(Target,true);
+    TestTrue(TEXT("Pursuit restarts"),Component->StartAI());
+    const FVector ExternalFocus(600.f,700.f,0.f);
+    Controller->SetFocalPoint(ExternalFocus,EAIFocusPriority::Gameplay);
+    Fixture.Advance(0.1f); Component->EvaluateDecisions();
+    TestTrue(TEXT("External focus is respected"),Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay).Equals(ExternalFocus,1.f));
+    Component->StopAI();
+    TestTrue(TEXT("Cleanup preserves replacement focus"),Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay).Equals(ExternalFocus,1.f));
+    Controller->ClearFocus(EAIFocusPriority::Gameplay);
+    TestTrue(TEXT("Pursuit starts for moving-goal check"),Component->StartAI());
+    Target->SetActorLocation(FVector(1200.f,0.f,0.f));
+    Component->RefreshAllObservations(); Fixture.Advance(0.25f); Component->EvaluateDecisions();
+    TestNull(TEXT("New distant goal attempts navigation and fails safely without nav data"),Component->GetActiveAction());
+    TestTrue(TEXT("Moving-goal attempt recorded"),Component->GetDecisionDebugSnapshot().History.ContainsByPredicate([](const auto& E){ return E.Details==TEXT("No navigation"); }));
+
+    Component->StopAI();
+    Chase->bScanAtLastSeenLocation = true;
+    Chase->MaxLastSeenAge = 2.f;
+    Target->SetActorLocation(FVector(100.f, 40.f, 0.f));
+    Component->UpdateTargetSighting(Target, true);
+    if (!TestTrue(TEXT("Search setup starts within range"), Component->StartAI())) return false;
+    Component->UpdateTargetSighting(Target, false);
+    Component->EvaluateDecisions();
+    const FVector FirstScanPoint = Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay);
+    Fixture.Advance(0.25f);
+    Component->EvaluateDecisions();
+    const FVector NextScanPoint = Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay);
+    TestTrue(TEXT("Search sweeps the view after arriving"), !NextScanPoint.Equals(FirstScanPoint, 1.f));
+    Component->UpdateTargetSighting(Target, true);
+    Component->EvaluateDecisions();
+    TestTrue(TEXT("Reacquisition stops scanning"), Controller->GetFocalPointForPriority(EAIFocusPriority::Gameplay).Equals(Target->GetActorLocation(), 1.f));
     return true;
 }
 
@@ -278,7 +436,7 @@ bool FFuzzyAIUtilityGASTest::RunTest(const FString& Parameters)
 {
     using namespace FuzzyAIUtilityTests;
     // GAS globals can initialize once here; this existing project configuration warning is unrelated to adapter behavior.
-    AddExpectedMessage(TEXT("No GameplayCueNotifyPaths were specified"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 0);
+    AddExpectedMessage(TEXT("No GameplayCueNotifyPaths were specified"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, -1);
     FWorld Fixture;
     auto* Actor = Fixture.Actor(); auto* System = ASC(Actor);
     const auto Handle = System->GiveAbility(FGameplayAbilitySpec(UFuzzyAIUtilityTestAbility::StaticClass(),1));
@@ -292,6 +450,14 @@ bool FFuzzyAIUtilityGASTest::RunTest(const FString& Parameters)
     Component->StartAI(); System->CancelAbilityHandle(Handle); Component->EvaluateDecisions();
     TestNull(TEXT("External ability cancellation ends action"),Component->GetActiveAction());
     Component->StopAI();
+
+    Action->AbilityClass = UFuzzyAIUtilityInstantTestAbility::StaticClass();
+    Action->AbilityVariants = {UFuzzyAIUtilityTestAbility::StaticClass()};
+    TestTrue(TEXT("An ungranted primary class does not block a granted variant"), Component->StartAI());
+    TestTrue(TEXT("The granted variant activated"), System->FindAbilitySpecFromHandle(Handle)->IsActive());
+    Component->StopAI();
+    TestFalse(TEXT("Stopping cancels the selected variant"), System->FindAbilitySpecFromHandle(Handle)->IsActive());
+
     auto* InstantComponent=Fixture.Component(Actor);
     System->GiveAbility(FGameplayAbilitySpec(UFuzzyAIUtilityInstantTestAbility::StaticClass(),1));
     auto* Instant=NewObject<UFuzzyAIAbilityAction>(InstantComponent); Instant->AbilityClass=UFuzzyAIUtilityInstantTestAbility::StaticClass();

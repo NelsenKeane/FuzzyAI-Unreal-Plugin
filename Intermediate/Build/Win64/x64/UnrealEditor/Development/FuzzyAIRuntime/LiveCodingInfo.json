@@ -20,10 +20,10 @@
 			"FuzzyObservationManager.gen.cpp.obj",
 			"FuzzyObservationStore.gen.cpp.obj",
 			"FuzzyStandardObservations.gen.cpp.obj",
-			"ObservationMemory.gen.cpp.obj",
-			"ObservationRuntimeTypes.gen.cpp.obj"
+			"ObservationMemory.gen.cpp.obj"
 		],
 		"Module.FuzzyAIRuntime.3.cpp.obj": [
+			"ObservationRuntimeTypes.gen.cpp.obj",
 			"ObservationTypes.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
 			"FuzzyAIComponent.cpp.obj",

@@ -78,7 +78,7 @@ class UFuzzyAIAction;
 struct Z_Construct_UClass_UFuzzyAIWaitAction_Statics;
 FUZZYAIRUNTIME_API UClass* Z_Construct_UClass_UFuzzyAIWaitAction_NoRegister();
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_71_INCLASS_NO_PURE_DECLS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_75_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUFuzzyAIWaitAction(); \
 	friend struct ::Z_Construct_UClass_UFuzzyAIWaitAction_Statics; \
@@ -89,7 +89,7 @@ public: \
 	DECLARE_SERIALIZER(UFuzzyAIWaitAction)
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_71_ENHANCED_CONSTRUCTORS \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_75_ENHANCED_CONSTRUCTORS \
 	/** Deleted move- and copy-constructors, should never be used */ \
 	UFuzzyAIWaitAction(UFuzzyAIWaitAction&&) = delete; \
 	UFuzzyAIWaitAction(const UFuzzyAIWaitAction&) = delete; \
@@ -99,12 +99,12 @@ public: \
 	NO_API virtual ~UFuzzyAIWaitAction();
 
 
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_68_PROLOG
-#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_71_GENERATED_BODY \
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_72_PROLOG
+#define FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_75_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_71_INCLASS_NO_PURE_DECLS \
-	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_71_ENHANCED_CONSTRUCTORS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_75_INCLASS_NO_PURE_DECLS \
+	FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h_75_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 

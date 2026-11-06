@@ -90,6 +90,8 @@ bool UFuzzyAIAction::Validate(FString& Error) const
 {
     if (!FuzzyAI::IsActionId(ActionId))
     { Error = TEXT("Action ID must be a registered AI.Action.* tag."); return false; }
+    if (!FMath::IsFinite(SelectionWeight) || SelectionWeight < 0.f || SelectionWeight > 100.f)
+    { Error = TEXT("Selection weight must be finite and in [0,100]."); return false; }
     if (!FMath::IsFinite(BaseScore) || BaseScore < 0.f || BaseScore > 1.f ||
         !FMath::IsFinite(MinimumRunTime) || MinimumRunTime < 0.f || !FMath::IsFinite(Timeout) || Timeout <= 0.f ||
         !FMath::IsFinite(Cooldown) || Cooldown < 0.f || !FMath::IsFinite(FailureCooldown) || FailureCooldown < 0.f)
@@ -105,18 +107,23 @@ bool UFuzzyAIAction::Validate(FString& Error) const
 UFuzzyAIWaitAction::UFuzzyAIWaitAction() { ActionId = FGameplayTag::RequestGameplayTag(TEXT("AI.Action.Wait"), false); BaseScore = 0.05f; }
 void UFuzzyAIWaitAction::Start_Implementation(const FFuzzyAIContext& Context)
 {
+    if (bWaitUntilInterrupted)
+    {
+        ExecutionDetail = TEXT("Waiting for a higher-priority action");
+        return;
+    }
     ExecutionDetail = FString::Printf(TEXT("Wait %.2fs"), Duration);
     FinishAt = GetWorld()->GetTimeSeconds() + Duration;
     if (Duration == 0.f) FinishAction();
 }
 void UFuzzyAIWaitAction::Update_Implementation(float DeltaSeconds)
 {
-    if (GetWorld()->GetTimeSeconds() >= FinishAt) FinishAction();
+    if (!bWaitUntilInterrupted && GetWorld()->GetTimeSeconds() >= FinishAt) FinishAction();
 }
 bool UFuzzyAIWaitAction::Validate(FString& Error) const
 {
     if (!Super::Validate(Error)) return false;
-    if (!FMath::IsFinite(Duration) || Duration < 0.f || Duration >= Timeout)
+    if (!bWaitUntilInterrupted && (!FMath::IsFinite(Duration) || Duration < 0.f || Duration >= Timeout))
     { Error = TEXT("Wait duration must be finite, nonnegative and below Timeout."); return false; }
     return true;
 }

@@ -23,6 +23,9 @@ public:
     UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Scoring") TArray<TObjectPtr<UFuzzyAIConsideration>> Considerations;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Scoring") EFuzzyAICombine Combine = EFuzzyAICombine::Product;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Scoring", meta=(ClampMin="0", ClampMax="1")) float BaseScore = 1.f;
+    /** Relative chance at a decision boundary. Zero keeps this action outside the weighted draw. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Scoring", meta=(ClampMin="0", ClampMax="100"))
+    float SelectionWeight = 1.f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Execution") bool bInterruptible = true;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Execution") bool bCancelOnTargetChange = true;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Execution") bool bAbortWhenRequirementsFail = true;
@@ -48,6 +51,7 @@ public:
     UFUNCTION(BlueprintPure, Category="Fuzzy AI|Action") FFuzzyAIContext GetActionContext() const;
     virtual UWorld* GetWorld() const override;
     virtual bool Validate(FString& Error) const;
+    virtual bool HasExecutionTimeout() const { return true; }
     bool MeetsRequirements(const FFuzzyAIContext& Context) const;
     /** Native adapter cleanup cannot be bypassed by a Blueprint End override. */
     virtual void CleanupExecution(EFuzzyAIActionResult Result) {}
@@ -72,6 +76,8 @@ class FUZZYAIRUNTIME_API UFuzzyAIWaitAction : public UFuzzyAIAction
 public:
     UFuzzyAIWaitAction();
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Wait", meta=(ClampMin="0")) float Duration = 1.f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Wait") bool bWaitUntilInterrupted = false;
+    virtual bool HasExecutionTimeout() const override { return !bWaitUntilInterrupted; }
     virtual void Start_Implementation(const FFuzzyAIContext& Context) override;
     virtual void Update_Implementation(float DeltaSeconds) override;
     virtual bool Validate(FString& Error) const override;

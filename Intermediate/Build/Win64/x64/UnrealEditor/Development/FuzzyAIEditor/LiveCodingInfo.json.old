@@ -2,11 +2,14 @@
 	"RemapUnityFiles": 
 	{
 		"Module.FuzzyAIEditor.cpp.obj": [
+			"CombatWarpMigrationCommandlet.gen.cpp.obj",
 			"FuzzyAIEditor.init.gen.cpp.obj",
 			"FuzzyAIUtilityTestTypes.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
+			"CombatWarpMigrationCommandlet.cpp.obj",
 			"FuzzyAIDebugModel.cpp.obj",
 			"SFuzzyAIDebugger.cpp.obj",
+			"SFuzzyAILayerPanel.cpp.obj",
 			"FuzzyAIEditor.cpp.obj",
 			"FuzzyAIDebuggerTests.cpp.obj",
 			"FuzzyAIObservationTests.cpp.obj",

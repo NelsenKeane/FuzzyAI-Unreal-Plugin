@@ -197,7 +197,7 @@ void UFuzzyAIDecisionRuntime::Update()
                 Updating->ExecutionDetail = bTargetChanged ? TEXT("Target changed") : TEXT("Continuation failed");
                 EndActive(EFuzzyAIActionResult::Cancelled, Time);
             }
-            else if (Time - Updating->StartedAt >= Updating->Timeout)
+            else if (Updating->HasExecutionTimeout() && Time - Updating->StartedAt >= Updating->Timeout)
             {
                 Updating->ExecutionDetail = TEXT("Timeout");
                 EndActive(EFuzzyAIActionResult::Failed, Time);
@@ -236,18 +236,38 @@ void UFuzzyAIDecisionRuntime::Update()
         if (Entry.bActive) ActiveScore = Entry.Score;
         Scores.Add(Entry);
     }
+    const bool bWeighted = Component->DecisionProfile && Component->DecisionProfile->bWeightedActionSelection;
+    float SelectionFloor = 0.f;
     if (Active && Best != Active)
     {
         if (!Best) { Debug.Selection = TEXT("No challenger"); return; }
         if (!Active->bInterruptible) { Debug.Selection = TEXT("Locked"); return; }
+        if (bWeighted && ActiveScore > 0.f && Active->SelectionWeight > 0.f && Best->SelectionWeight > 0.f)
+        { Debug.Selection = TEXT("Holding weighted choice"); return; }
         if (Time - Active->StartedAt < Active->MinimumRunTime) { Debug.Selection = TEXT("Min time"); return; }
         if (BestScore <= ActiveScore + Component->SwitchingMargin) { Debug.Selection = TEXT("Margin"); return; }
+        SelectionFloor = ActiveScore + Component->SwitchingMargin;
         Debug.Selection = TEXT("Switch");
         Active->ExecutionDetail = TEXT("Higher score");
         EndActive(EFuzzyAIActionResult::Cancelled, Time);
     }
     else Debug.Selection = Active ? TEXT("Best active") : Best ? TEXT("Best score") : TEXT("No candidate");
     if (!bRunning || Active || !Best) return;
+    if (bWeighted && Best->SelectionWeight > 0.f)
+    {
+        float Total = 0.f;
+        for (int32 Index = 0; Index < Scores.Num(); ++Index)
+        {
+            const float Score = Scores[Index].Score;
+            if (Score <= SelectionFloor) continue;
+            const float Weight = Score * FMath::Clamp(Actions[Index]->SelectionWeight, 0.f, 100.f);
+            if (Weight <= 0.f) continue;
+            Total += Weight;
+            // A weighted draw without a second pass or any rolls while the current action is held.
+            if (FMath::FRand() * Total < Weight) Best = Actions[Index];
+        }
+        Debug.Selection = TEXT("Weighted choice");
+    }
     Active = Best;
     Best->Component = Component;
     Best->StartTarget = Context.Target;

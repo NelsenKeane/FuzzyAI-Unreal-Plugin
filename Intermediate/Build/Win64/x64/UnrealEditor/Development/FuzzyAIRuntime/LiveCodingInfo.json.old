@@ -5,13 +5,14 @@
 			"FuzzyAIAction.gen.cpp.obj",
 			"FuzzyAIComponent.gen.cpp.obj",
 			"FuzzyAIConsideration.gen.cpp.obj",
+			"FuzzyAIDebugTypes.gen.cpp.obj",
 			"FuzzyAIDecisionProfile.gen.cpp.obj",
-			"FuzzyAIDecisionRuntime.gen.cpp.obj",
-			"FuzzyAIInterpretation.gen.cpp.obj",
-			"FuzzyAIRuntime.init.gen.cpp.obj",
-			"FuzzyAIStandardActions.gen.cpp.obj"
+			"FuzzyAIDecisionRuntime.gen.cpp.obj"
 		],
 		"Module.FuzzyAIRuntime.2.cpp.obj": [
+			"FuzzyAIInterpretation.gen.cpp.obj",
+			"FuzzyAIRuntime.init.gen.cpp.obj",
+			"FuzzyAIStandardActions.gen.cpp.obj",
 			"FuzzyAITypes.gen.cpp.obj",
 			"FuzzyAIUtilityLibrary.gen.cpp.obj",
 			"FuzzyAttributeObservation.gen.cpp.obj",
@@ -20,10 +21,10 @@
 			"FuzzyObservationStore.gen.cpp.obj",
 			"FuzzyStandardObservations.gen.cpp.obj",
 			"ObservationMemory.gen.cpp.obj",
-			"ObservationRuntimeTypes.gen.cpp.obj",
-			"ObservationTypes.gen.cpp.obj"
+			"ObservationRuntimeTypes.gen.cpp.obj"
 		],
 		"Module.FuzzyAIRuntime.3.cpp.obj": [
+			"ObservationTypes.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
 			"FuzzyAIComponent.cpp.obj",
 			"FuzzyAIRuntime.cpp.obj",

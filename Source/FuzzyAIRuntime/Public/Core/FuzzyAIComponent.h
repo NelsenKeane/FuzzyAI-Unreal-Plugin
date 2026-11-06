@@ -26,6 +26,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservationsChanged, const T
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIObservedEventRecorded, const FFuzzyAIObservedEvent&, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuzzyAIActionStarted, FGameplayTag, ActionId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFuzzyAIActionFinished, FGameplayTag, ActionId, EFuzzyAIActionResult, Result);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFuzzyAIVisibleTargetChanged, AActor*);
 
 #pragma endregion
 /** Single actor-facing entry point. Internal layers are per-enemy UObjects, not actor components. */
@@ -155,6 +156,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "Fuzzy AI|Observation")
     AActor* GetTarget() const;
 
+    AActor* GetVisibleTarget() const { return bTargetVisible ? GetTarget() : nullptr; }
+    FFuzzyAIVisibleTargetChanged OnVisibleTargetChanged;
+
     UFUNCTION(BlueprintCallable, Category = "Fuzzy AI|Observation")
     void SetTargetVisibility(bool bVisible);
 
@@ -239,6 +243,7 @@ private:
     TArray<TFunction<void()>> DeferredActions;
     bool bRunning = false;
     bool bTargetVisible = false;
+    double LastTrackedSight = -1.;
     bool bProcessing = false;
     bool bEndingPlay = false;
     int32 ContextRevision = 0;
@@ -251,6 +256,7 @@ private:
     void ProcessRefresh(const TArray<FName>& SensorNames);
     TArray<FName> GetRefreshSensorNames(bool bContextOnly = false) const;
     void ApplyTarget(AActor* NewTarget, bool bVisible);
+    void RefreshTrackedSight();
     void Defer(TFunction<void()>&& Action);
     bool RecordEventAtTime(const FFuzzyAIObservedEvent& Event, double ReceiptTime);
 

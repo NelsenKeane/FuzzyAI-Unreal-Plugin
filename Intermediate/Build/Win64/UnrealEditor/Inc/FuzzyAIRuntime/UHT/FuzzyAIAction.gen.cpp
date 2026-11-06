@@ -755,6 +755,18 @@ struct Z_Construct_UClass_UFuzzyAIAction_Statics
 		{ "ClampMin", "0" },
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIAction.h" },
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_SelectionWeight_MetaData[] = {
+		{ "Category", "Scoring" },
+		{ "ClampMax", "100" },
+		{ "ClampMin", "0" },
+#if !UE_BUILD_SHIPPING
+		{ "Comment", "/** Relative chance at a decision boundary. Zero keeps this action outside the weighted draw. */" },
+#endif
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIAction.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Relative chance at a decision boundary. Zero keeps this action outside the weighted draw." },
+#endif
+	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bInterruptible_MetaData[] = {
 		{ "Category", "Execution" },
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIAction.h" },
@@ -810,6 +822,7 @@ struct Z_Construct_UClass_UFuzzyAIAction_Statics
 	static const UECodeGen_Private::FBytePropertyParams NewProp_Combine_Underlying;
 	static const UECodeGen_Private::FEnumPropertyParams NewProp_Combine;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_BaseScore;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_SelectionWeight;
 	static void NewProp_bInterruptible_SetBit(void* Obj);
 	static const UECodeGen_Private::FBoolPropertyParams NewProp_bInterruptible;
 	static void NewProp_bCancelOnTargetChange_SetBit(void* Obj);
@@ -875,6 +888,7 @@ const UECodeGen_Private::FArrayPropertyParams Z_Construct_UClass_UFuzzyAIAction_
 const UECodeGen_Private::FBytePropertyParams Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_Combine_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
 const UECodeGen_Private::FEnumPropertyParams Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_Combine = { "Combine", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAction, Combine), Z_Construct_UEnum_FuzzyAIRuntime_EFuzzyAICombine, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Combine_MetaData), NewProp_Combine_MetaData) }; // 3083912316
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_BaseScore = { "BaseScore", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAction, BaseScore), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BaseScore_MetaData), NewProp_BaseScore_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_SelectionWeight = { "SelectionWeight", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIAction, SelectionWeight), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_SelectionWeight_MetaData), NewProp_SelectionWeight_MetaData) };
 void Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_bInterruptible_SetBit(void* Obj)
 {
 	((UFuzzyAIAction*)Obj)->bInterruptible = 1;
@@ -909,6 +923,7 @@ const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UFuzzyAIA
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_Combine_Underlying,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_Combine,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_BaseScore,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_SelectionWeight,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_bInterruptible,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_bCancelOnTargetChange,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIAction_Statics::NewProp_bAbortWhenRequirementsFail,
@@ -1002,10 +1017,16 @@ struct Z_Construct_UClass_UFuzzyAIWaitAction_Statics
 		{ "ClampMin", "0" },
 		{ "ModuleRelativePath", "Public/Utility/FuzzyAIAction.h" },
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bWaitUntilInterrupted_MetaData[] = {
+		{ "Category", "Wait" },
+		{ "ModuleRelativePath", "Public/Utility/FuzzyAIAction.h" },
+	};
 #endif // WITH_METADATA
 
 // ********** Begin Class UFuzzyAIWaitAction constinit property declarations ***********************
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_Duration;
+	static void NewProp_bWaitUntilInterrupted_SetBit(void* Obj);
+	static const UECodeGen_Private::FBoolPropertyParams NewProp_bWaitUntilInterrupted;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 // ********** End Class UFuzzyAIWaitAction constinit property declarations *************************
 	static UObject* (*const DependentSingletons[])();
@@ -1017,8 +1038,14 @@ struct Z_Construct_UClass_UFuzzyAIWaitAction_Statics
 
 // ********** Begin Class UFuzzyAIWaitAction Property Definitions **********************************
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_Duration = { "Duration", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UFuzzyAIWaitAction, Duration), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_Duration_MetaData), NewProp_Duration_MetaData) };
+void Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_bWaitUntilInterrupted_SetBit(void* Obj)
+{
+	((UFuzzyAIWaitAction*)Obj)->bWaitUntilInterrupted = 1;
+}
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_bWaitUntilInterrupted = { "bWaitUntilInterrupted", nullptr, (EPropertyFlags)0x0010000000000015, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UFuzzyAIWaitAction), &Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_bWaitUntilInterrupted_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bWaitUntilInterrupted_MetaData), NewProp_bWaitUntilInterrupted_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UFuzzyAIWaitAction_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_Duration,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UFuzzyAIWaitAction_Statics::NewProp_bWaitUntilInterrupted,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_UFuzzyAIWaitAction_Statics::PropPointers) < 2048);
 // ********** End Class UFuzzyAIWaitAction Property Definitions ************************************
@@ -1061,11 +1088,11 @@ UFuzzyAIWaitAction::~UFuzzyAIWaitAction() {}
 struct Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_UFuzzyAIAction, UFuzzyAIAction::StaticClass, TEXT("UFuzzyAIAction"), &Z_Registration_Info_UClass_UFuzzyAIAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIAction), 1191365652U) },
-		{ Z_Construct_UClass_UFuzzyAIWaitAction, UFuzzyAIWaitAction::StaticClass, TEXT("UFuzzyAIWaitAction"), &Z_Registration_Info_UClass_UFuzzyAIWaitAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIWaitAction), 273036204U) },
+		{ Z_Construct_UClass_UFuzzyAIAction, UFuzzyAIAction::StaticClass, TEXT("UFuzzyAIAction"), &Z_Registration_Info_UClass_UFuzzyAIAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIAction), 3655341289U) },
+		{ Z_Construct_UClass_UFuzzyAIWaitAction, UFuzzyAIWaitAction::StaticClass, TEXT("UFuzzyAIWaitAction"), &Z_Registration_Info_UClass_UFuzzyAIWaitAction, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UFuzzyAIWaitAction), 496920076U) },
 	};
 }; // Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_Statics 
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_826447982{
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_749345301{
 	TEXT("/Script/FuzzyAIRuntime"),
 	Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_GameAnimationSample_Plugins_FuzzyAI_Source_FuzzyAIRuntime_Public_Utility_FuzzyAIAction_h__Script_FuzzyAIRuntime_Statics::ClassInfo),
 	nullptr, 0,
